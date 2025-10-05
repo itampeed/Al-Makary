@@ -36,14 +36,18 @@ const Header = ({ onMenuPress, onBack, showBack }) => {
       {/* Menu Button Bar */}
       <View style={styles.menuBar}>
         <View style={styles.menuRow}>
-          {showBack && (
-            <TouchableOpacity style={[styles.menuButton, styles.backButton]} onPress={onBack}>
-              <Ionicons name="arrow-back" size={20} color="white" />
+          <View style={styles.leftSlot}>
+            {showBack && (
+              <TouchableOpacity style={[styles.menuButton, styles.backButton]} onPress={onBack}>
+                <Ionicons name="arrow-back" size={20} color="white" />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.rightSlot}>
+            <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
+              <Ionicons name="menu" size={20} color="white" />
             </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
-            <Ionicons name="menu" size={20} color="white" />
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -66,14 +70,24 @@ const styles = StyleSheet.create({
   menuBar: {
     backgroundColor: Colors.accent,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
   },
   menuRow: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  leftSlot: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  rightSlot: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
   logoContainer: {
     flex: 1,
