@@ -93,26 +93,45 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
     
     return (
       <View key={item.key}>
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => item.hasDropdown ? toggleExpanded(item.key) : handleMenuPress(item.key)}
-        >
-          {item.hasDropdown && (
-            <Ionicons 
-              name={isExpanded ? "remove" : "add"} 
-              size={20} 
-              color="#666" 
-              style={styles.icon}
-            />
-          )}
-          <Text style={[
-            styles.menuText, 
-            isActive && styles.activeMenuText
-          ]}>
-            {item.text}
-          </Text>
-        </TouchableOpacity>
-        
+        {item.hasDropdown ? (
+          <View style={styles.menuItem}>
+            <TouchableOpacity 
+              onPress={() => toggleExpanded(item.key)} 
+              style={styles.iconTouchable}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons 
+                name={isExpanded ? "remove" : "add"} 
+                size={20} 
+                color="#666" 
+                style={styles.icon}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.menuTextWrapper}
+              onPress={() => handleMenuPress(item.key)}
+            >
+              <Text style={[
+                styles.menuText, 
+                isActive && styles.activeMenuText
+              ]}>
+                {item.text}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => handleMenuPress(item.key)}
+          >
+            <Text style={[
+              styles.menuText, 
+              isActive && styles.activeMenuText
+            ]}>
+              {item.text}
+            </Text>
+          </TouchableOpacity>
+        )}
         {item.hasDropdown && isExpanded && item.subItems && (
           <View style={styles.subMenuContainer}>
             {item.subItems.map(subItem => {
@@ -242,6 +261,12 @@ const styles = StyleSheet.create({
   activeSubMenuText: {
     color: Colors.activeText,
     fontWeight: 'bold',
+  },
+  iconTouchable: {
+  },
+  menuTextWrapper: {
+    flex: 1,
+    alignItems: 'flex-end',
   },
 });
 
