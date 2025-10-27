@@ -7,7 +7,7 @@ import Colors from '../constants/Colors';
 const Layout = ({ children, onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   return (
     <View style={styles.container}>
-      <Header onMenuPress={onMenuPress} onBack={onBack} showBack={showBack} />
+      <Header onMenuPress={onMenuPress} onBack={onBack} showBack={showBack} onNavigate={onNavigate} />
       
       <View style={styles.content}>
         {children}

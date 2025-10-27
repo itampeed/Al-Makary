@@ -6,10 +6,11 @@ import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
 import booksData from '../assets/data/books.json';
 
-const BooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
+const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('الكل');
+  const [searchQuery, setSearchQuery] = useState('');
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -36,9 +37,9 @@ const BooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curr
   const renderBook = (book) => (
     <View key={book.id} style={styles.bookCard}>
       <Image 
-        source={{ uri: `../assets/${book.image}` }} 
+        source={{ uri: `../assets/IMG_32673B75A9C0-22.jpg` }} 
         style={styles.bookImage}
-        defaultSource={require('../assets/All Books.jpg')}
+        defaultSource={require('../assets/IMG_32673B75A9C0-22.jpg')}
       />
       <View style={styles.bookInfo}>
         <Text style={styles.bookTitle}>{book.title}</Text>
@@ -72,7 +73,8 @@ const BooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curr
     >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>الكتب</Text>
+          <Text style={styles.title}>المتجر</Text>
+          <Text style={styles.subtitle}>اكتشف مجموعتنا الكاملة من الكتب الروحية</Text>
         </View>
         
         {/* Category Filter */}
@@ -100,9 +102,19 @@ const BooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curr
           ))}
         </ScrollView>
 
-        {/* Books Grid */}
-        <View style={styles.booksContainer}>
+        {/* Products Grid */}
+        <View style={styles.productsContainer}>
           {filteredBooks.map(renderBook)}
+        </View>
+
+        {/* Shop Now Button */}
+        <View style={styles.shopNowContainer}>
+          <TouchableOpacity 
+            style={styles.shopNowButton}
+            onPress={() => onNavigate('cart')}
+          >
+            <Text style={styles.shopNowText}>عرض السلة</Text>
+          </TouchableOpacity>
         </View>
 
         <Footer />
@@ -119,12 +131,20 @@ const styles = StyleSheet.create({
   titleContainer: {
     paddingHorizontal: 20,
     marginBottom: 20,
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     color: Colors.header,
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: Colors.text,
+    textAlign: 'center',
+    opacity: 0.8,
   },
   categoryContainer: {
     paddingHorizontal: 20,
@@ -150,7 +170,7 @@ const styles = StyleSheet.create({
   selectedCategoryText: {
     color: Colors.background,
   },
-  booksContainer: {
+  productsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -223,6 +243,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  shopNowContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    alignItems: 'center',
+  },
+  shopNowButton: {
+    backgroundColor: Colors.accent,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  shopNowText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
 
-export default BooksScreen;
+export default ShopScreen;

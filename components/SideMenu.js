@@ -61,30 +61,30 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
   };
 
   const menuItems = [
-    { key: 'home', text: 'الصفحة الرئيسية' },
-    { key: 'homepage', text: 'الصفحة الرئيسية' },
-    { key: 'about', text: 'عن الدرة الطقسية' },
+    { key: 'home', text: 'Home - الصفحة الرئيسية' },
+    { key: 'about', text: 'About - عن الدرة الطقسية' },
+    { key: 'shop', text: 'Shop - المتجر' },
     { 
       key: 'books', 
-      text: 'الكتب', 
+      text: 'Books - الكتب', 
       hasDropdown: true,
       subItems: [
-        { key: 'buy-books', text: 'لشراء الكتب' }
+        { key: 'buy-books', text: 'Buy Books - لشراء الكتب' }
       ]
     },
     { 
       key: 'lectures', 
-      text: 'المحاضرات', 
+      text: 'Lectures - المحاضرات', 
       hasDropdown: true,
       subItems: [
-        { key: 'lecture-selections', text: 'مختارات من المحاضرات' }
+        { key: 'lecture-selections', text: 'Lecture Selections - مختارات من المحاضرات' }
       ]
     },
-    { key: 'return-policy', text: 'سياسة الاسترجاع والاستبدال' },
-    { key: 'privacy-policy', text: 'سياسة الخصوصية' },
-    { key: 'contact', text: 'للتواصل معنا' },
-    { key: 'account', text: 'حسابي' },
-    { key: 'cart', text: 'سلة المشتريات' },
+    { key: 'return-policy', text: 'Return Policy - سياسة الاسترجاع والاستبدال' },
+    { key: 'privacy-policy', text: 'Privacy Policy - سياسة الخصوصية' },
+    { key: 'contact', text: 'Contact - للتواصل معنا' },
+    { key: 'account', text: 'My Account - حسابي' },
+    { key: 'cart', text: 'Shopping Cart - سلة المشتريات' },
   ];
 
   const renderMenuItem = (item) => {

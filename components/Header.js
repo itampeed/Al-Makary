@@ -1,9 +1,12 @@
 import React from 'react';
-import { View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Image, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
+import { useCart } from '../contexts/CartContext';
 
-const Header = ({ onMenuPress, onBack, showBack }) => {
+const Header = ({ onMenuPress, onBack, showBack, onNavigate }) => {
+  const { getTotalItems } = useCart();
+  const cartItemCount = getTotalItems();
   return (
     <View style={styles.headerContainer}>
       {/* Logo Bar */}
@@ -44,9 +47,22 @@ const Header = ({ onMenuPress, onBack, showBack }) => {
             )}
           </View>
           <View style={styles.rightSlot}>
-            <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
-              <Ionicons name="menu" size={20} color="white" />
-            </TouchableOpacity>
+            <View style={styles.rightButtons}>
+              <TouchableOpacity 
+                style={styles.cartButton} 
+                onPress={() => onNavigate('cart')}
+              >
+                <Ionicons name="cart" size={20} color="white" />
+                {cartItemCount > 0 && (
+                  <View style={styles.cartBadge}>
+                    <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
+                <Ionicons name="menu" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -88,6 +104,35 @@ const styles = StyleSheet.create({
   rightSlot: {
     flex: 1,
     alignItems: 'flex-end',
+  },
+  rightButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  cartButton: {
+    backgroundColor: Colors.header,
+    padding: 10,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    position: 'relative',
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cartBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   logoContainer: {
     flex: 1,

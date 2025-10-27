@@ -15,6 +15,10 @@ import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import ContactScreen from './screens/ContactScreen';
 import MyAccountScreen from './screens/MyAccountScreen';
 import ShoppingCartScreen from './screens/ShoppingCartScreen';
+import CheckoutScreen from './screens/CheckoutScreen';
+import ShopScreen from './screens/ShopScreen';
+import { CartProvider } from './contexts/CartContext';
+import { AuthProvider } from './contexts/AuthContext';
 import Colors from './constants/Colors';
 
 export default function App() {
@@ -55,6 +59,8 @@ export default function App() {
         return <HomePageScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
       case 'about':
         return <AboutScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
+      case 'shop':
+        return <ShopScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
       case 'books':
         return <BooksScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
       case 'buy-books':
@@ -75,20 +81,26 @@ export default function App() {
         return <MyAccountScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
       case 'cart':
         return <ShoppingCartScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
+      case 'checkout':
+        return <CheckoutScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
       default:
         return <HomeScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
     }
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" backgroundColor={Colors.header} />
-      {isLoading ? (
-        <SplashScreen onFinish={handleSplashFinish} />
-      ) : (
-        renderCurrentScreen()
-      )}
-    </View>
+    <AuthProvider>
+      <CartProvider>
+        <View style={styles.container}>
+          <StatusBar style="light" backgroundColor={Colors.header} />
+          {isLoading ? (
+            <SplashScreen onFinish={handleSplashFinish} />
+          ) : (
+            renderCurrentScreen()
+          )}
+        </View>
+      </CartProvider>
+    </AuthProvider>
   );
 }
 
