@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Linking } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { recordPurchase, savePurchaseToFirestore } from '../services/purchases';
+import { CHECKOUT_BASE_URL, RETURN_SUCCESS_URL, RETURN_CANCEL_URL } from '../config/stripe';
 
 const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const { items, getTotalPrice, clearCart } = useCart();
@@ -50,7 +52,7 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     const requiredFields = ['firstName', 'lastName', 'email', 'phone', 'address', 'city'];
     for (const field of requiredFields) {
       if (!customerInfo[field].trim()) {
-        Alert.alert('خطأ في البيانات', 'يرجى ملء جميع الحقول المطلوبة');
+        Alert.alert('Invalid data', 'Please fill in all required fields');
         return false;
       }
     }
@@ -58,7 +60,7 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(customerInfo.email)) {
-      Alert.alert('خطأ في البيانات', 'يرجى إدخال بريد إلكتروني صحيح');
+      Alert.alert('Invalid email', 'Please enter a valid email address');
       return false;
     }
     
@@ -71,24 +73,16 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     setIsProcessing(true);
     
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      Alert.alert(
-        'تم الدفع بنجاح',
-        'شكراً لك على الشراء! سيتم إرسال تفاصيل الطلب إلى بريدك الإلكتروني.',
-        [
-          {
-            text: 'موافق',
-            onPress: () => {
-              clearCart();
-              onNavigate('home');
-            }
-          }
-        ]
-      );
+      // Redirect to external Stripe Checkout (server should create a session and redirect)
+      const params = new URLSearchParams({
+        success_url: RETURN_SUCCESS_URL,
+        cancel_url: RETURN_CANCEL_URL,
+        customer_email: customerInfo.email,
+      }).toString();
+      const url = `${CHECKOUT_BASE_URL}?${params}`;
+      await Linking.openURL(url);
     } catch (error) {
-      Alert.alert('خطأ في الدفع', 'حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.');
+      Alert.alert('Payment error', 'An error occurred while processing payment. Please try again.');
     } finally {
       setIsProcessing(false);
     }

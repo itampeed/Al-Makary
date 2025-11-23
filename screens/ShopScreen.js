@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
-import booksData from '../assets/data/books.json';
+import { fetchCatalogFromDrive } from '../services/driveContent';
 
 const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [books, setBooks] = useState([]);
@@ -12,10 +12,33 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
   const [selectedCategory, setSelectedCategory] = useState('الكل');
   const [searchQuery, setSearchQuery] = useState('');
   const { addToCart } = useCart();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setBooks(booksData.books);
-    setFilteredBooks(booksData.books);
+    (async () => {
+      try {
+        setIsLoading(true);
+        const catalog = await fetchCatalogFromDrive();
+        const normalized = (catalog.books || []).map((b) => ({
+          ...b,
+          image: b.coverImage,
+        }));
+        // Debug logs for fetched products, images and PDFs
+        try {
+          console.log('Shop: fetched catalog count', (catalog.books || []).length);
+          console.log('Shop: normalized books overview', normalized.map(b => ({ id: b.id, title: b.title, coverUrl: b.coverUrl, pdfUrl: b.pdfUrl })));
+        } catch {}
+        setBooks(normalized);
+        setFilteredBooks(normalized);
+      } catch (e) {
+        Alert.alert('Failed to load books', e?.message || 'Could not fetch catalog from Drive.');
+        try { console.log('Shop: fetch error', e); } catch {}
+        setBooks([]);
+        setFilteredBooks([]);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, []);
 
   const categories = ['الكل', ...new Set(books.map(book => book.category))];
@@ -31,15 +54,15 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
 
   const handleAddToCart = (book) => {
     addToCart(book);
-    Alert.alert('تمت الإضافة', `تم إضافة "${book.title}" إلى السلة`);
+    Alert.alert('Added', `"${book.title}" has been added to the cart`);
   };
 
   const renderBook = (book) => (
     <View key={book.id} style={styles.bookCard}>
       <Image 
-        source={{ uri: `../assets/IMG_32673B75A9C0-22.jpg` }} 
+        source={book.coverUrl ? { uri: book.coverUrl } : require('../assets/AllBooks.jpg')}
         style={styles.bookImage}
-        defaultSource={require('../assets/IMG_32673B75A9C0-22.jpg')}
+        defaultSource={require('../assets/AllBooks.jpg')}
       />
       <View style={styles.bookInfo}>
         <Text style={styles.bookTitle}>{book.title}</Text>
@@ -47,6 +70,9 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
         <Text style={styles.bookDescription} numberOfLines={2}>
           {book.description}
         </Text>
+        {book.pdfUrl ? (
+          <Text style={styles.bookAuthor}>{book.pdfFile}</Text>
+        ) : null}
         <View style={styles.bookDetails}>
           <Text style={styles.bookPrice}>${book.price}</Text>
           <Text style={styles.bookPages}>{book.pages} صفحة</Text>
@@ -82,6 +108,7 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
           horizontal 
           showsHorizontalScrollIndicator={false}
           style={styles.categoryContainer}
+          contentContainerStyle={styles.categoryContent}
         >
           {categories.map((category) => (
             <TouchableOpacity
@@ -104,7 +131,14 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
 
         {/* Products Grid */}
         <View style={styles.productsContainer}>
-          {filteredBooks.map(renderBook)}
+          {isLoading ? (
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={Colors.header} />
+              <Text style={styles.loaderText}>Loading books...</Text>
+            </View>
+          ) : (
+            filteredBooks.map(renderBook)
+          )}
         </View>
 
         {/* Shop Now Button */}
@@ -150,10 +184,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginBottom: 20,
   },
+  categoryContent: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+  },
   categoryButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginRight: 10,
+    marginLeft: 10,
     backgroundColor: Colors.background,
     borderRadius: 20,
     borderWidth: 1,
@@ -173,6 +211,16 @@ const styles = StyleSheet.create({
   productsContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+  loaderContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loaderText: {
+    marginTop: 12,
+    color: Colors.text,
+    fontSize: 14,
   },
   bookCard: {
     backgroundColor: '#fff',

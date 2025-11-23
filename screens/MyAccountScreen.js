@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
@@ -13,6 +13,40 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
     password: '',
     name: '',
   });
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [forgotVisible, setForgotVisible] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+
+  const ThemedModal = ({ visible, onRequestClose, title, children, primaryAction, secondaryAction }) => (
+    <Modal
+      transparent
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onRequestClose}
+    >
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalCard}>
+          {!!title && <Text style={styles.modalTitle}>{title}</Text>}
+          <View>
+            {children}
+          </View>
+          <View style={styles.modalActions}>
+            {secondaryAction && (
+              <TouchableOpacity style={styles.modalSecondaryBtn} onPress={secondaryAction.onPress} disabled={secondaryAction.disabled}>
+                <Text style={styles.modalSecondaryText}>{secondaryAction.label}</Text>
+              </TouchableOpacity>
+            )}
+            {primaryAction && (
+              <TouchableOpacity style={[styles.modalPrimaryBtn, primaryAction.disabled && styles.submitButtonDisabled]} onPress={primaryAction.onPress} disabled={primaryAction.disabled}>
+                <Text style={styles.modalPrimaryText}>{primaryAction.label}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -24,39 +58,51 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
 
   const handleLogin = async () => {
     if (!formData.email.trim() || !formData.password.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
     const result = await login(formData.email, formData.password);
     if (result.success) {
-      Alert.alert('تم تسجيل الدخول', 'مرحباً بك!');
+      Alert.alert('Logged in', 'Welcome!');
     } else {
-      Alert.alert('خطأ في تسجيل الدخول', result.error || 'حدث خطأ غير متوقع');
+      Alert.alert('Login error', result.error || 'An unexpected error occurred');
     }
   };
 
   const handleRegister = async () => {
     if (!formData.email.trim() || !formData.password.trim() || !formData.name.trim()) {
-      Alert.alert('خطأ', 'يرجى ملء جميع الحقول');
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    if (!confirmPassword.trim()) {
+      Alert.alert('Error', 'Please confirm your password');
+      return;
+    }
+    if (formData.password !== confirmPassword) {
+      Alert.alert('Password mismatch', 'Passwords do not match');
       return;
     }
 
     const result = await register(formData.email, formData.password, formData.name);
     if (result.success) {
-      Alert.alert('تم إنشاء الحساب', 'تم إرسال رابط التحقق إلى بريدك الإلكتروني. يرجى التحقق من بريدك.');
+      Alert.alert('Account created', 'Please verify your email before signing in.');
+      // reset to login mode
+      setIsLoginMode(true);
+      setFormData({ email: formData.email, password: '', name: '' });
+      setConfirmPassword('');
     } else {
-      Alert.alert('خطأ في إنشاء الحساب', result.error || 'حدث خطأ غير متوقع');
+      Alert.alert('Registration error', result.error || 'An unexpected error occurred');
     }
   };
 
   const handleLogout = () => {
     Alert.alert(
-      'تسجيل الخروج',
-      'هل تريد تسجيل الخروج؟',
+      'Sign out',
+      'Do you want to sign out?',
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'تسجيل الخروج', style: 'destructive', onPress: logout }
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign out', style: 'destructive', onPress: logout }
       ]
     );
   };
@@ -70,24 +116,24 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
   const renderLoginForm = () => (
     <View style={styles.formContainer}>
       <Text style={styles.formTitle}>
-        {isLoginMode ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+        {isLoginMode ? 'Sign in' : 'Create a new account'}
       </Text>
       
       {!isLoginMode && (
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>الاسم الكامل *</Text>
+          <Text style={styles.inputLabel}>Full name *</Text>
           <TextInput
             style={styles.textInput}
             value={formData.name}
             onChangeText={(value) => handleInputChange('name', value)}
-            placeholder="أدخل اسمك الكامل"
+            placeholder="Enter your full name"
             textAlign="right"
           />
         </View>
       )}
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>البريد الإلكتروني *</Text>
+        <Text style={styles.inputLabel}>Email *</Text>
         <TextInput
           style={styles.textInput}
           value={formData.email}
@@ -100,16 +146,30 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>كلمة المرور *</Text>
+        <Text style={styles.inputLabel}>Password *</Text>
         <TextInput
           style={styles.textInput}
           value={formData.password}
           onChangeText={(value) => handleInputChange('password', value)}
-          placeholder="أدخل كلمة المرور"
+            placeholder="Enter your password"
           secureTextEntry
           textAlign="right"
         />
       </View>
+
+      {!isLoginMode && (
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>Confirm password *</Text>
+          <TextInput
+            style={styles.textInput}
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            placeholder="Confirm your password"
+            secureTextEntry
+            textAlign="right"
+          />
+        </View>
+      )}
 
       {error && (
         <View style={styles.errorContainer}>
@@ -124,13 +184,19 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       >
         <Text style={styles.submitButtonText}>
           {isLoading 
-            ? 'جاري المعالجة...' 
+            ? 'Processing...'
             : isLoginMode 
-              ? 'تسجيل الدخول' 
-              : 'إنشاء الحساب'
+              ? 'Sign in' 
+              : 'Create account'
           }
         </Text>
       </TouchableOpacity>
+
+      {isLoginMode && (
+        <TouchableOpacity style={styles.forgotButton} onPress={() => { setForgotEmail(formData.email); setForgotVisible(true); }}>
+          <Text style={styles.forgotText}>Forgot password?</Text>
+        </TouchableOpacity>
+      )}
 
       <TouchableOpacity 
         style={styles.toggleButton}
@@ -138,8 +204,8 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       >
         <Text style={styles.toggleButtonText}>
           {isLoginMode 
-            ? 'ليس لديك حساب؟ أنشئ حساب جديد' 
-            : 'لديك حساب بالفعل؟ سجل دخولك'
+            ? 'Don\'t have an account? Create one' 
+            : 'Already have an account? Sign in'
           }
         </Text>
       </TouchableOpacity>
@@ -204,15 +270,73 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       onBack={onBack}
       showBack={showBack}
     >
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={80}
+      >
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={true}
+        >
         <View style={styles.titleContainer}>
           <Text style={styles.title}>حسابي</Text>
         </View>
         
         {isAuthenticated ? renderUserProfile() : renderLoginForm()}
 
-        <Footer />
-      </ScrollView>
+          <Footer />
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* Forgot Password Modal (Themed) */}
+      <ThemedModal
+        visible={forgotVisible}
+        onRequestClose={() => setForgotVisible(false)}
+        title="Reset password"
+        primaryAction={{
+          label: forgotLoading ? 'Sending...' : 'Send email',
+          disabled: forgotLoading,
+          onPress: async () => {
+            if (!forgotEmail.trim()) {
+              Alert.alert('Invalid email', 'Please enter your email');
+              return;
+            }
+            setForgotLoading(true);
+            try {
+              const { sendPasswordResetEmail } = require('../config/firebase').firebaseAuth;
+              const res = await sendPasswordResetEmail(forgotEmail.trim());
+              if (res.success) {
+                Alert.alert('Email sent', 'Check your inbox for a reset link');
+                setForgotVisible(false);
+              } else {
+                Alert.alert('Reset failed', res.error || 'Unable to send reset email');
+              }
+            } catch (e) {
+              Alert.alert('Reset failed', 'Unable to send reset email');
+            } finally {
+              setForgotLoading(false);
+            }
+          }
+        }}
+        secondaryAction={{
+          label: 'Cancel',
+          onPress: () => setForgotVisible(false),
+        }}
+      >
+        <Text style={styles.modalHint}>Enter your account email and we will send a reset link.</Text>
+        <TextInput
+          style={styles.textInput}
+          value={forgotEmail}
+          onChangeText={setForgotEmail}
+          placeholder="email@example.com"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          textAlign="right"
+        />
+      </ThemedModal>
     </Layout>
   );
 };
@@ -221,6 +345,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingTop: 20,
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   titleContainer: {
     paddingHorizontal: 20,
@@ -306,6 +433,15 @@ const styles = StyleSheet.create({
   toggleButtonText: {
     color: Colors.header,
     fontSize: 16,
+    textDecorationLine: 'underline',
+  },
+  forgotButton: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  forgotText: {
+    color: Colors.header,
+    fontSize: 14,
     textDecorationLine: 'underline',
   },
   // User Profile Styles
@@ -400,6 +536,65 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  // Modal styles
+  modalBackdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(53,21,6,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCard: {
+    backgroundColor: Colors.background,
+    width: '85%',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.header,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalHint: {
+    fontSize: 14,
+    color: Colors.text,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  modalSecondaryBtn: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.accent,
+    borderRadius: 8,
+  },
+  modalSecondaryText: {
+    color: Colors.header,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalPrimaryBtn: {
+    backgroundColor: Colors.header,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  modalPrimaryText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',

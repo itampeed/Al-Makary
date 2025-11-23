@@ -1,51 +1,20 @@
-// Firebase Configuration
-// This file provides mock Firebase functions for development
-// Replace with actual Firebase imports when ready to deploy
-
-// Mock Firebase functions for development
-const mockAuth = {
-  signInWithEmailAndPassword: async (email, password) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      user: {
-        uid: 'mock-user-id',
-        email: email,
-        displayName: email.split('@')[0],
-        metadata: { creationTime: new Date().toISOString() },
-        emailVerified: true
-      }
-    };
-  },
-  createUserWithEmailAndPassword: async (email, password) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      user: {
-        uid: 'mock-user-id',
-        email: email,
-        displayName: email.split('@')[0],
-        metadata: { creationTime: new Date().toISOString() },
-        emailVerified: false
-      }
-    };
-  },
-  sendEmailVerification: async () => {
-    // Simulate email verification
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return Promise.resolve();
-  },
-  signOut: async () => {
-    // Simulate sign out
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return Promise.resolve();
-  },
-  currentUser: null,
-  onAuthStateChanged: (callback) => {
-    // Mock auth state change listener
-    return () => {};
-  }
-};
+// Firebase Configuration - Real SDK initialization
+import { initializeApp, getApps } from 'firebase/app';
+import {
+  getAuth,
+  signInWithEmailAndPassword as fbSignInWithEmailAndPassword,
+  createUserWithEmailAndPassword as fbCreateUserWithEmailAndPassword,
+  sendEmailVerification as fbSendEmailVerification,
+  sendPasswordResetEmail as fbSendPasswordResetEmail,
+  signOut as fbSignOut,
+  onAuthStateChanged as fbOnAuthStateChanged,
+} from 'firebase/auth';
+import {
+  getFirestore,
+} from 'firebase/firestore';
+import {
+  getStorage,
+} from 'firebase/storage';
 
 // Your Firebase project configuration
 const firebaseConfig = {
@@ -58,20 +27,22 @@ const firebaseConfig = {
   measurementId: "G-789QGEWGWK"
 };
 
-// For development, use mock auth
-// Replace with actual Firebase imports when ready
-const auth = mockAuth;
+// Initialize Firebase (avoid re-init in Fast Refresh)
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
 // Export Firebase services
-export { auth };
-export default { config: firebaseConfig };
+export { auth, db, storage };
+export default { config: firebaseConfig, app };
 
 // Firebase Authentication Helper Functions
 export const firebaseAuth = {
   // Sign in with email and password
   signInWithEmailAndPassword: async (email, password) => {
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      const userCredential = await fbSignInWithEmailAndPassword(auth, email, password);
       return {
         success: true,
         user: {
@@ -79,6 +50,7 @@ export const firebaseAuth = {
           email: userCredential.user.email,
           name: userCredential.user.displayName || email.split('@')[0],
           createdAt: userCredential.user.metadata.creationTime,
+          emailVerified: !!userCredential.user.emailVerified,
         }
       };
     } catch (error) {
@@ -92,15 +64,8 @@ export const firebaseAuth = {
   // Create user with email and password
   createUserWithEmailAndPassword: async (email, password, displayName) => {
     try {
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-      
-      // Update display name
-      await userCredential.user.updateProfile({
-        displayName: displayName
-      });
-
-      // Send email verification
-      await userCredential.user.sendEmailVerification();
+      const userCredential = await fbCreateUserWithEmailAndPassword(auth, email, password);
+      try { await fbSendEmailVerification(userCredential.user); } catch {}
 
       return {
         success: true,
@@ -109,7 +74,7 @@ export const firebaseAuth = {
           email: userCredential.user.email,
           name: displayName,
           createdAt: userCredential.user.metadata.creationTime,
-          emailVerified: userCredential.user.emailVerified,
+          emailVerified: false,
         }
       };
     } catch (error) {
@@ -123,13 +88,23 @@ export const firebaseAuth = {
   // Sign out
   signOut: async () => {
     try {
-      await auth.signOut();
+      await fbSignOut(auth);
       return { success: true };
     } catch (error) {
       return {
         success: false,
         error: error.message
       };
+    }
+  },
+
+  // Send password reset email
+  sendPasswordResetEmail: async (email) => {
+    try {
+      await fbSendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   },
 
@@ -140,6 +115,6 @@ export const firebaseAuth = {
 
   // Listen to auth state changes
   onAuthStateChanged: (callback) => {
-    return auth.onAuthStateChanged(callback);
+    return fbOnAuthStateChanged(auth, callback);
   }
 };

@@ -76,6 +76,11 @@ export const AuthProvider = ({ children }) => {
       const result = await firebaseAuth.signInWithEmailAndPassword(email, password);
       
       if (result.success) {
+        // Block login if email not verified
+        if (result.user && result.user.emailVerified === false) {
+          dispatch({ type: 'LOGIN_FAILURE', payload: 'Please verify your email before logging in.' });
+          return { success: false, error: 'Please verify your email before logging in.' };
+        }
         // Save to storage
         await AsyncStorage.setItem('user', JSON.stringify(result.user));
         dispatch({ type: 'LOGIN_SUCCESS', payload: result.user });
@@ -98,10 +103,10 @@ export const AuthProvider = ({ children }) => {
       const result = await firebaseAuth.createUserWithEmailAndPassword(email, password, name);
       
       if (result.success) {
-        // Save to storage
-        await AsyncStorage.setItem('user', JSON.stringify(result.user));
-        dispatch({ type: 'LOGIN_SUCCESS', payload: result.user });
-        return { success: true };
+        // Do NOT log the user in until email is verified
+        // Show success on caller; stay unauthenticated
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return { success: true, pendingVerification: true };
       } else {
         dispatch({ type: 'LOGIN_FAILURE', payload: result.error });
         return { success: false, error: result.error };

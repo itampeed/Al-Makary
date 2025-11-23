@@ -1,14 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import Layout from '../components/Layout';
-import Footer from '../components/Footer';
-import Colors from '../constants/Colors';
+import Layout from '../../components/Layout';
+import Footer from '../../components/Footer';
+import Colors from '../../constants/Colors';
 
-const BuyBooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
+const Lecture3 = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   return (
-    <Layout 
-      onMenuPress={onMenuPress} 
-      isMenuVisible={isMenuVisible} 
+    <Layout
+      onMenuPress={onMenuPress}
+      isMenuVisible={isMenuVisible}
       onCloseMenu={onCloseMenu}
       onNavigate={onNavigate}
       currentScreen={currentScreen}
@@ -17,13 +17,11 @@ const BuyBooksScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>لشراء الكتب</Text>
+          <Text style={styles.title}>محاضرة 3</Text>
         </View>
-        
-        <View style={styles.contentContainer}>
-          <Text style={styles.placeholderText}>المحتوى سيتم إضافته لاحقاً</Text>
+        <View style={styles.body}>
+          <Text style={styles.paragraph}>محتوى محاضرة 3...</Text>
         </View>
-
         <Footer />
       </ScrollView>
     </Layout>
@@ -37,7 +35,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     paddingHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 10,
   },
   title: {
     fontSize: 24,
@@ -45,18 +43,17 @@ const styles = StyleSheet.create({
     color: Colors.header,
     textAlign: 'center',
   },
-  contentContainer: {
-    flex: 1,
+  body: {
     paddingHorizontal: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 300,
+    marginTop: 10,
   },
-  placeholderText: {
-    fontSize: 16,
+  paragraph: {
+    fontSize: 14,
     color: Colors.text,
-    textAlign: 'center',
+    lineHeight: 22,
+    textAlign: 'right',
   },
 });
 
-export default BuyBooksScreen;
+export default Lecture3;
+

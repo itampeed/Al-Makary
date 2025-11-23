@@ -18,29 +18,29 @@ const ShoppingCartScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
 
   const handleRemoveItem = (itemId, itemTitle) => {
     Alert.alert(
-      'تأكيد الحذف',
-      `هل تريد حذف "${itemTitle}" من السلة؟`,
+      'Remove item',
+      `Remove "${itemTitle}" from the cart?`,
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'حذف', style: 'destructive', onPress: () => removeFromCart(itemId) }
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Remove', style: 'destructive', onPress: () => removeFromCart(itemId) }
       ]
     );
   };
 
   const handleClearCart = () => {
     Alert.alert(
-      'تأكيد الحذف',
-      'هل تريد حذف جميع العناصر من السلة؟',
+      'Clear cart',
+      'Are you sure you want to remove all items from the cart?',
       [
-        { text: 'إلغاء', style: 'cancel' },
-        { text: 'حذف الكل', style: 'destructive', onPress: clearCart }
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear all', style: 'destructive', onPress: clearCart }
       ]
     );
   };
 
   const handleCheckout = () => {
     if (items.length === 0) {
-      Alert.alert('السلة فارغة', 'يرجى إضافة عناصر إلى السلة أولاً');
+      Alert.alert('Cart is empty', 'Please add items to the cart first');
       return;
     }
     onNavigate('checkout');
@@ -49,9 +49,9 @@ const ShoppingCartScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
   const renderCartItem = (item) => (
     <View key={item.id} style={styles.cartItem}>
       <Image 
-        source={{ uri: `../assets/${item.image}` }} 
+        source={item.coverUrl ? { uri: item.coverUrl } : require('../assets/AllBooks.jpg')}
         style={styles.itemImage}
-        defaultSource={require('../assets/All Books.jpg')}
+        defaultSource={require('../assets/AllBooks.jpg')}
       />
       <View style={styles.itemInfo}>
         <Text style={styles.itemTitle}>{item.title}</Text>

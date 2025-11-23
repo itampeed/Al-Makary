@@ -65,19 +65,31 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
     { key: 'about', text: 'About - عن الدرة الطقسية' },
     { key: 'shop', text: 'Shop - المتجر' },
     { 
-      key: 'books', 
+      key: 'library', 
       text: 'Books - الكتب', 
       hasDropdown: true,
       subItems: [
-        { key: 'buy-books', text: 'Buy Books - لشراء الكتب' }
+        { key: 'book-first', text: 'Book First - الكتاب الأول' },
+        { key: 'book-second', text: 'Book Second - الكتاب الثاني' },
+        { key: 'book-third', text: 'Book Third - الكتاب الثالث' },
+        { key: 'book-fourth', text: 'Book Fourth - الكتاب الرابع' },
       ]
     },
     { 
       key: 'lectures', 
       text: 'Lectures - المحاضرات', 
       hasDropdown: true,
-      subItems: [
-        { key: 'lecture-selections', text: 'Lecture Selections - مختارات من المحاضرات' }
+      subItems : [
+        { key: 'lecture-1', text: 'Lecture 1 - كتاب 1يسوع المسيح وتعاليمه' },
+        { key: 'lecture-2', text: 'Lecture 2 - كتاب الكنيسة والعذراء مريم' },
+        { key: 'lecture-3', text: 'Lecture 3 - الإيمان والعقيدة' },
+        { key: 'lecture-4', text: 'Lecture 4 - كتاب قوانين الكنيسة' },
+        { key: 'lecture-5', text: 'Lecture 5 - صلوات الكنيسة' },
+        { key: 'lecture-6', text: 'Lecture 6 - أسرار الكنيسة' },
+        { key: 'lecture-7', text: 'Lecture 7 - أصوام الكنيسة' },
+        { key: 'lecture-8', text: 'Lecture 8 - أعياد الكنيسة' },
+        { key: 'lecture-9', text: 'Lecture 9 - التَّاريخ اللِّيتورجي لكنيسة الإسكندريَّة' },
+        { key: 'lecture-10', text: 'Lecture 10 - الأبحاث وموضوعات عامة' },
       ]
     },
     { key: 'return-policy', text: 'Return Policy - سياسة الاسترجاع والاستبدال' },
@@ -85,6 +97,7 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
     { key: 'contact', text: 'Contact - للتواصل معنا' },
     { key: 'account', text: 'My Account - حسابي' },
     { key: 'cart', text: 'Shopping Cart - سلة المشتريات' },
+    { key: 'purchased', text: 'My Books - كتبي' },
   ];
 
   const renderMenuItem = (item) => {

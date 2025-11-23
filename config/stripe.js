@@ -1,3 +1,13 @@
+// Stripe Checkout configuration (external flow)
+// Replace these with your deployed Checkout URLs
+
+export const CHECKOUT_BASE_URL = 'https://your-checkout-page.example.com/create-session';
+
+// Deep link or universal link your Stripe success page will redirect back to
+// Example for Expo/dev: yourapp://purchase-complete
+export const RETURN_SUCCESS_URL = 'yourapp://purchase-complete';
+export const RETURN_CANCEL_URL = 'yourapp://purchase-cancel';
+
 // Stripe Configuration
 // Replace with your actual Stripe keys
 export const STRIPE_CONFIG = {

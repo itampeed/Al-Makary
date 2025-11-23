@@ -53,14 +53,14 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               style={styles.sectionImage}
               resizeMode="cover"
             />
-            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
+            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('lectures')}>
               <Text style={styles.sectionText}>مخطوطات و مراجع الكتب</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
             <Image 
-              source={require('../assets/All Books.jpg')} 
+              source={require('../assets/AllBooks.jpg')} 
               style={styles.sectionImage}
               resizeMode="cover"
             />
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   },
   sectionText: {
     fontSize: 16,
-    color: Colors.activeText,
+    color: 'gray',
     fontWeight: 'bold',
     textAlign: 'center',
   },

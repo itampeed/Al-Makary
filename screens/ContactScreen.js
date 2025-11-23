@@ -47,11 +47,6 @@ const ContactScreen = ({
           </Text>
 
           <View style={styles.buttonsRow}>
-            <TouchableOpacity style={[styles.button, styles.emailButton]} onPress={handleCall}>
-              <Ionicons name="call-outline" size={20} color="#fff" style={styles.icon} />
-              <Text style={styles.buttonText}>Contact</Text>
-            </TouchableOpacity>
-
             <TouchableOpacity style={[styles.button, styles.emailButton]} onPress={handleEmail}>
               <Ionicons name="mail-outline" size={20} color="#fff" style={styles.icon} />
               <Text style={styles.buttonText}>Email</Text>
