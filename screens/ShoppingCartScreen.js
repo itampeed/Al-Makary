@@ -6,15 +6,7 @@ import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
 
 const ShoppingCartScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
-  const { items, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(itemId);
-    } else {
-      updateQuantity(itemId, newQuantity);
-    }
-  };
+  const { items, removeFromCart, getTotalPrice, clearCart } = useCart();
 
   const handleRemoveItem = (itemId, itemTitle) => {
     Alert.alert(
@@ -48,38 +40,23 @@ const ShoppingCartScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
 
   const renderCartItem = (item) => (
     <View key={item.id} style={styles.cartItem}>
-      <Image 
-        source={item.coverUrl ? { uri: item.coverUrl } : require('../assets/AllBooks.jpg')}
-        style={styles.itemImage}
-        defaultSource={require('../assets/AllBooks.jpg')}
-      />
-      <View style={styles.itemInfo}>
-        <Text style={styles.itemTitle}>{item.title}</Text>
-        <Text style={styles.itemAuthor}>{item.author}</Text>
-        <Text style={styles.itemPrice}>${item.price}</Text>
-      </View>
-      <View style={styles.itemControls}>
-        <View style={styles.quantityControls}>
-          <TouchableOpacity 
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.id, item.quantity - 1)}
-          >
-            <Text style={styles.quantityButtonText}>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity 
-            style={styles.quantityButton}
-            onPress={() => handleQuantityChange(item.id, item.quantity + 1)}
-          >
-            <Text style={styles.quantityButtonText}>+</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.imageContainer}>
+        <Image 
+          source={item.coverUrl ? { uri: item.coverUrl } : require('../assets/AllBooks.jpg')}
+          style={styles.itemImage}
+          defaultSource={require('../assets/AllBooks.jpg')}
+        />
         <TouchableOpacity 
           style={styles.removeButton}
           onPress={() => handleRemoveItem(item.id, item.title)}
         >
           <Text style={styles.removeButtonText}>حذف</Text>
         </TouchableOpacity>
+      </View>
+      <View style={styles.itemInfo}>
+        <Text style={styles.itemTitle}>{item.title}</Text>
+        <Text style={styles.itemAuthor}>{item.author}</Text>
+        <Text style={styles.itemPrice}>${item.price}</Text>
       </View>
     </View>
   );
@@ -250,15 +227,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  imageContainer: {
+    alignItems: 'center',
+    marginRight: 12,
+  },
   itemImage: {
     width: 60,
     height: 80,
     borderRadius: 8,
-    marginRight: 12,
+    marginBottom: 8,
   },
   itemInfo: {
     flex: 1,
-    marginRight: 12,
   },
   itemTitle: {
     fontSize: 16,
@@ -279,39 +259,13 @@ const styles = StyleSheet.create({
     color: Colors.header,
     textAlign: 'right',
   },
-  itemControls: {
-    alignItems: 'center',
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  quantityButton: {
-    backgroundColor: Colors.header,
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  quantityButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginHorizontal: 12,
-    minWidth: 20,
-    textAlign: 'center',
-  },
   removeButton: {
     backgroundColor: '#ff4444',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
+    width: '100%',
+    alignItems: 'center',
   },
   removeButtonText: {
     color: '#fff',

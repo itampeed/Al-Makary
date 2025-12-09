@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { recordPurchase, savePurchaseToFirestore } from '../services/purchases';
-import { CHECKOUT_BASE_URL, RETURN_SUCCESS_URL, RETURN_CANCEL_URL } from '../config/stripe';
+import { purchaseCartTotal } from '../services/revenuecat';
 
 const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const { items, getTotalPrice, clearCart } = useCart();
@@ -73,16 +73,59 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     setIsProcessing(true);
     
     try {
-      // Redirect to external Stripe Checkout (server should create a session and redirect)
-      const params = new URLSearchParams({
-        success_url: RETURN_SUCCESS_URL,
-        cancel_url: RETURN_CANCEL_URL,
-        customer_email: customerInfo.email,
-      }).toString();
-      const url = `${CHECKOUT_BASE_URL}?${params}`;
-      await Linking.openURL(url);
+      const totalPrice = getTotalPrice();
+      const result = await purchaseCartTotal(totalPrice, items);
+      
+      if (result.success) {
+        // Purchase successful
+        try {
+          // Get RevenueCat transaction ID
+          const transactionId = result.customerInfo?.originalTransactionIdentifier || 
+                                result.customerInfo?.firstSeen || 
+                                Date.now().toString();
+          
+          // Record purchase in Firestore
+          const purchaseData = {
+            userId: user?.id || 'anonymous',
+            items: items,
+            total: totalPrice,
+            customerInfo: customerInfo,
+            purchaseDate: new Date().toISOString(),
+            transactionId: transactionId,
+            revenueCatInfo: {
+              originalTransactionId: result.customerInfo?.originalTransactionIdentifier,
+              firstSeen: result.customerInfo?.firstSeen,
+              requestDate: result.customerInfo?.requestDate,
+            },
+          };
+          
+          // Save to Firestore
+          await savePurchaseToFirestore(purchaseData);
+          
+          // Also save to local storage for offline access
+          if (user?.id) {
+            await recordPurchase(user.id, items);
+          }
+          
+          // Clear cart
+          clearCart();
+          
+          // Navigate to purchased screen
+          onNavigate('purchased');
+        } catch (error) {
+          console.error('Error saving purchase:', error);
+          Alert.alert('نجح الدفع', 'تم الدفع بنجاح ولكن حدث خطأ في حفظ البيانات. يرجى التواصل مع الدعم.');
+        }
+      } else if (result.cancelled) {
+        // User cancelled
+        Alert.alert('تم الإلغاء', 'تم إلغاء عملية الدفع');
+      } else {
+        // Purchase failed
+        Alert.alert('فشل الدفع', result.error || 'حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.');
+      }
     } catch (error) {
-      Alert.alert('Payment error', 'An error occurred while processing payment. Please try again.');
+      Alert.alert('خطأ في الدفع', 'حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى.');
+      console.error('Payment error:', error);
     } finally {
       setIsProcessing(false);
     }
@@ -95,7 +138,7 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
         <View key={item.id} style={styles.summaryItem}>
           <Text style={styles.summaryItemName}>{item.title}</Text>
           <Text style={styles.summaryItemDetails}>
-            {item.quantity} × ${item.price} = ${(item.quantity * item.price).toFixed(2)}
+            ${item.price.toFixed(2)}
           </Text>
         </View>
       ))}
@@ -222,8 +265,8 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>طريقة الدفع</Text>
           <View style={styles.paymentMethod}>
-            <Text style={styles.paymentMethodText}>💳 الدفع بالبطاقة الائتمانية (Stripe)</Text>
-            <Text style={styles.paymentMethodSubtext}>آمن ومحمي</Text>
+            <Text style={styles.paymentMethodText}>💳 الشراء داخل التطبيق</Text>
+            <Text style={styles.paymentMethodSubtext}>آمن ومحمي عبر RevenueCat</Text>
           </View>
         </View>
 
@@ -236,9 +279,16 @@ const CheckoutScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
           onPress={handlePayment}
           disabled={isProcessing}
         >
-          <Text style={styles.paymentButtonText}>
-            {isProcessing ? 'جاري المعالجة...' : `دفع $${getTotalPrice().toFixed(2)}`}
-          </Text>
+          {isProcessing ? (
+            <View style={styles.processingContainer}>
+              <ActivityIndicator size="small" color="#fff" style={styles.processingSpinner} />
+              <Text style={styles.paymentButtonText}>جاري المعالجة...</Text>
+            </View>
+          ) : (
+            <Text style={styles.paymentButtonText}>
+              دفع ${getTotalPrice().toFixed(2)}
+            </Text>
+          )}
         </TouchableOpacity>
 
         <Footer />
@@ -414,6 +464,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  processingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  processingSpinner: {
+    marginRight: 8,
   },
 });
 

@@ -1,38 +1,47 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Alert, ActivityIndicator, Modal } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useCart } from '../contexts/CartContext';
-import { fetchCatalogFromDrive } from '../services/driveContent';
+import { fetchCatalogFromSupabase } from '../services/supabaseContent';
+import { Ionicons } from '@expo/vector-icons';
+
+const ITEMS_PER_PAGE = 12;
 
 const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('الكل');
   const [searchQuery, setSearchQuery] = useState('');
-  const { addToCart } = useCart();
+  const [currentPage, setCurrentPage] = useState(1);
+  const { addToCart, items } = useCart();
   const [isLoading, setIsLoading] = useState(true);
+  const scrollViewRef = useRef(null);
+  const [imageLoadingStates, setImageLoadingStates] = useState({});
+  const [customAlert, setCustomAlert] = useState({
+    visible: false,
+    message: '',
+    type: 'success', // 'success' or 'error'
+  });
 
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
-        const catalog = await fetchCatalogFromDrive();
+        const catalog = await fetchCatalogFromSupabase();
         const normalized = (catalog.books || []).map((b) => ({
           ...b,
           image: b.coverImage,
         }));
-        // Debug logs for fetched products, images and PDFs
-        try {
-          console.log('Shop: fetched catalog count', (catalog.books || []).length);
-          console.log('Shop: normalized books overview', normalized.map(b => ({ id: b.id, title: b.title, coverUrl: b.coverUrl, pdfUrl: b.pdfUrl })));
-        } catch {}
         setBooks(normalized);
         setFilteredBooks(normalized);
       } catch (e) {
-        Alert.alert('Failed to load books', e?.message || 'Could not fetch catalog from Drive.');
-        try { console.log('Shop: fetch error', e); } catch {}
+        setCustomAlert({
+          visible: true,
+          message: e?.message || 'تعذر جلب الكتالوج من Supabase.',
+          type: 'error',
+        });
         setBooks([]);
         setFilteredBooks([]);
       } finally {
@@ -45,6 +54,7 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
 
   const filterByCategory = (category) => {
     setSelectedCategory(category);
+    setCurrentPage(1); // Reset to first page when category changes
     if (category === 'الكل') {
       setFilteredBooks(books);
     } else {
@@ -52,40 +62,143 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
     }
   };
 
-  const handleAddToCart = (book) => {
-    addToCart(book);
-    Alert.alert('Added', `"${book.title}" has been added to the cart`);
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredBooks.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentBooks = filteredBooks.slice(startIndex, endIndex);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
   };
 
-  const renderBook = (book) => (
-    <View key={book.id} style={styles.bookCard}>
-      <Image 
-        source={book.coverUrl ? { uri: book.coverUrl } : require('../assets/AllBooks.jpg')}
-        style={styles.bookImage}
-        defaultSource={require('../assets/AllBooks.jpg')}
-      />
-      <View style={styles.bookInfo}>
-        <Text style={styles.bookTitle}>{book.title}</Text>
-        <Text style={styles.bookAuthor}>{book.author}</Text>
-        <Text style={styles.bookDescription} numberOfLines={2}>
-          {book.description}
-        </Text>
-        {book.pdfUrl ? (
-          <Text style={styles.bookAuthor}>{book.pdfFile}</Text>
-        ) : null}
-        <View style={styles.bookDetails}>
-          <Text style={styles.bookPrice}>${book.price}</Text>
-          <Text style={styles.bookPages}>{book.pages} صفحة</Text>
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Scroll to top when page changes
+  useEffect(() => {
+    if (scrollViewRef.current) {
+      scrollViewRef.current.scrollTo({ y: 0, animated: true });
+    }
+  }, [currentPage]);
+
+  const handleAddToCart = (book) => {
+    try {
+      addToCart(book);
+      setCustomAlert({
+        visible: true,
+        message: `تمت إضافة "${book.title}" إلى السلة`,
+        type: 'success',
+      });
+    } catch (error) {
+      setCustomAlert({
+        visible: true,
+        message: 'حدث خطأ أثناء إضافة الكتاب إلى السلة',
+        type: 'error',
+      });
+    }
+  };
+
+  const closeCustomAlert = () => {
+    setCustomAlert({ visible: false, message: '', type: 'success' });
+  };
+
+  const handleImageLoadStart = (bookId) => {
+    setImageLoadingStates(prev => ({ ...prev, [bookId]: true }));
+  };
+
+  const handleImageLoad = (bookId) => {
+    setImageLoadingStates(prev => ({ ...prev, [bookId]: false }));
+  };
+
+  const handleImageError = (bookId) => {
+    setImageLoadingStates(prev => ({ ...prev, [bookId]: false }));
+  };
+
+  // Preload images for current page
+  useEffect(() => {
+    const pageStartIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const pageEndIndex = pageStartIndex + ITEMS_PER_PAGE;
+    const booksToPreload = filteredBooks.slice(pageStartIndex, pageEndIndex);
+    booksToPreload.forEach((book) => {
+      if (book.coverUrl) {
+        Image.prefetch(book.coverUrl).catch(() => {
+          // Silently handle prefetch errors
+        });
+      }
+    });
+  }, [currentPage, filteredBooks]);
+
+  const renderBook = (book) => {
+    const isImageLoading = imageLoadingStates[book.id] !== false;
+    const imageSource = book.coverUrl 
+      ? { uri: book.coverUrl, cache: 'force-cache' }
+      : require('../assets/AllBooks.jpg');
+    
+    // Determine if book is in English
+    const isEnglish = book.language && book.language.toLowerCase() === 'english';
+    
+    // Check if book is already in cart
+    const isInCart = items.some(item => item.id === book.id);
+    
+    return (
+      <View key={book.id} style={styles.bookCard}>
+        <View style={styles.imageContainer}>
+          {isImageLoading && (
+            <View style={styles.imagePlaceholder}>
+              <ActivityIndicator size="small" color={Colors.header} />
+            </View>
+          )}
+          <Image 
+            source={imageSource}
+            style={[styles.bookImage, isImageLoading && styles.bookImageLoading]}
+            defaultSource={require('../assets/AllBooks.jpg')}
+            onLoadStart={() => handleImageLoadStart(book.id)}
+            onLoad={() => handleImageLoad(book.id)}
+            onError={() => handleImageError(book.id)}
+            resizeMode="cover"
+            fadeDuration={200}
+          />
         </View>
-        <TouchableOpacity 
-          style={styles.addToCartButton}
-          onPress={() => handleAddToCart(book)}
-        >
-          <Text style={styles.addToCartText}>أضف إلى السلة</Text>
-        </TouchableOpacity>
+        <View style={[styles.bookInfo, isEnglish && styles.bookInfoEnglish]}>
+          <Text style={[styles.bookTitle, isEnglish && styles.bookTitleEnglish]}>{book.title}</Text>
+          <Text style={[styles.bookAuthor, isEnglish && styles.bookAuthorEnglish]}>{book.author}</Text>
+          <Text style={[styles.bookDescription, isEnglish && styles.bookDescriptionEnglish]} numberOfLines={2}>
+            {book.description}
+          </Text>
+          {book.pdfUrl ? (
+            <Text style={[styles.bookAuthor, isEnglish && styles.bookAuthorEnglish]}>{book.pdfFile}</Text>
+          ) : null}
+          <View style={[styles.bookDetails, isEnglish && styles.bookDetailsEnglish]}>
+            <Text style={styles.bookPrice}>${book.price}</Text>
+            <Text style={[styles.bookPages, isEnglish && styles.bookPagesEnglish]}>
+              {book.pages} صفحة
+            </Text>
+          </View>
+          <TouchableOpacity 
+            style={[styles.addToCartButton, isInCart && styles.addToCartButtonDisabled]}
+            onPress={() => handleAddToCart(book)}
+            disabled={isInCart}
+          >
+            <Text style={[styles.addToCartText, isInCart && styles.addToCartTextDisabled]}>
+              {isInCart ? 'موجود في السلة' : 'أضف إلى السلة'}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <Layout 
@@ -97,7 +210,11 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
       onBack={onBack}
       showBack={showBack}
     >
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.content} 
+        showsVerticalScrollIndicator={true}
+      >
         <View style={styles.titleContainer}>
           <Text style={styles.title}>المتجر</Text>
           <Text style={styles.subtitle}>اكتشف مجموعتنا الكاملة من الكتب الروحية</Text>
@@ -134,10 +251,83 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
           {isLoading ? (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color={Colors.header} />
-              <Text style={styles.loaderText}>Loading books...</Text>
+              <Text style={styles.loaderText}>جاري تحميل الكتب...</Text>
             </View>
           ) : (
-            filteredBooks.map(renderBook)
+            <>
+              {currentBooks.map(renderBook)}
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <View style={styles.paginationContainer}>
+                  <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === 1 && styles.paginationButtonDisabled]}
+                    onPress={goToPreviousPage}
+                    disabled={currentPage === 1}
+                  >
+                    <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? '#ccc' : Colors.header} />
+                    <Text style={[styles.paginationButtonText, currentPage === 1 && styles.paginationButtonTextDisabled]}>
+                      السابق
+                    </Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.pageNumbersContainer}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <TouchableOpacity
+                            key={page}
+                            style={[
+                              styles.pageNumberButton,
+                              currentPage === page && styles.pageNumberButtonActive
+                            ]}
+                            onPress={() => goToPage(page)}
+                          >
+                            <Text style={[
+                              styles.pageNumberText,
+                              currentPage === page && styles.pageNumberTextActive
+                            ]}>
+                              {page}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <Text key={page} style={styles.pageEllipsis}>...</Text>
+                        );
+                      }
+                      return null;
+                    })}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[styles.paginationButton, currentPage === totalPages && styles.paginationButtonDisabled]}
+                    onPress={goToNextPage}
+                    disabled={currentPage === totalPages}
+                  >
+                    <Text style={[styles.paginationButtonText, currentPage === totalPages && styles.paginationButtonTextDisabled]}>
+                      التالي
+                    </Text>
+                    <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? '#ccc' : Colors.header} />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Page Info */}
+              {totalPages > 1 && (
+                <Text style={styles.pageInfo}>
+                  صفحة {currentPage} من {totalPages} ({filteredBooks.length} كتاب)
+                </Text>
+              )}
+            </>
           )}
         </View>
 
@@ -153,6 +343,39 @@ const ShopScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, curre
 
         <Footer />
       </ScrollView>
+
+      {/* Custom Alert Modal */}
+      <Modal
+        transparent
+        visible={customAlert.visible}
+        animationType="fade"
+        onRequestClose={closeCustomAlert}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              {/* Message */}
+              <Text style={styles.modalTitle}>
+                {customAlert.type === 'success' ? 'تمت الإضافة' : 'حدث خطأ'}
+              </Text>
+              <Text style={styles.modalMessage}>
+                {customAlert.message}
+              </Text>
+
+              {/* Button */}
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  customAlert.type === 'success' ? styles.modalButtonSuccess : styles.modalButtonError
+                ]}
+                onPress={closeCustomAlert}
+              >
+                <Text style={styles.modalButtonText}>حسناً</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </Layout>
   );
 };
@@ -236,10 +459,30 @@ const styles = StyleSheet.create({
     elevation: 5,
     overflow: 'hidden',
   },
+  imageContainer: {
+    width: '100%',
+    height: 200,
+    position: 'relative',
+    backgroundColor: '#f5f5f5',
+  },
+  imagePlaceholder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    zIndex: 1,
+  },
   bookImage: {
     width: '100%',
     height: 200,
     resizeMode: 'cover',
+  },
+  bookImageLoading: {
+    opacity: 0.3,
   },
   bookInfo: {
     padding: 16,
@@ -291,6 +534,32 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  addToCartButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  addToCartTextDisabled: {
+    color: '#666',
+  },
+  // English book styles (LTR)
+  bookInfoEnglish: {
+    // No special styling needed, text alignment handled by child elements
+  },
+  bookTitleEnglish: {
+    textAlign: 'left',
+  },
+  bookAuthorEnglish: {
+    textAlign: 'left',
+  },
+  bookDescriptionEnglish: {
+    textAlign: 'left',
+  },
+  bookDetailsEnglish: {
+    flexDirection: 'row',
+  },
+  bookPagesEnglish: {
+    textAlign: 'left',
+  },
   shopNowContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
@@ -305,6 +574,138 @@ const styles = StyleSheet.create({
     minWidth: 200,
   },
   shopNowText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  paginationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.header,
+  },
+  paginationButtonDisabled: {
+    opacity: 0.5,
+    borderColor: '#ccc',
+  },
+  paginationButtonText: {
+    fontSize: 14,
+    color: Colors.header,
+    fontWeight: '500',
+    marginHorizontal: 4,
+  },
+  paginationButtonTextDisabled: {
+    color: '#ccc',
+  },
+  pageNumbersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  pageNumberButton: {
+    minWidth: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+    borderRadius: 8,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.header,
+  },
+  pageNumberButtonActive: {
+    backgroundColor: Colors.header,
+    borderColor: Colors.header,
+  },
+  pageNumberText: {
+    fontSize: 14,
+    color: Colors.header,
+    fontWeight: '500',
+  },
+  pageNumberTextActive: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  pageEllipsis: {
+    fontSize: 14,
+    color: Colors.text,
+    marginHorizontal: 4,
+  },
+  pageInfo: {
+    textAlign: 'center',
+    fontSize: 14,
+    color: Colors.text,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  // Custom Alert Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContainer: {
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.header,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 24,
+  },
+  modalButton: {
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonSuccess: {
+    backgroundColor: Colors.header,
+  },
+  modalButtonError: {
+    backgroundColor: '#f44336',
+  },
+  modalButtonText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',

@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { savePurchase as savePurchaseToDb } from './firestore';
+import { db } from '../config/firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 const STORAGE_KEY_PREFIX = 'purchases:';
 
@@ -50,10 +52,81 @@ export const recordPurchase = async (userId, items) => {
   }
 };
 
-// Placeholder for Firestore integration; call this alongside recordPurchase when Firestore is available
-export const savePurchaseToFirestore = async (userId, items) => {
-  // Implement with @react-native-firebase/firestore when backend is ready
-  return Promise.resolve();
+// Save complete purchase data to Firestore
+export const savePurchaseToFirestore = async (purchaseData) => {
+  try {
+    const { userId, items, total, customerInfo, purchaseDate, transactionId, revenueCatInfo } = purchaseData;
+    
+    if (!userId || userId === 'anonymous') {
+      console.warn('Cannot save purchase: No user ID');
+      return;
+    }
+
+    // Save the complete purchase document
+    const purchaseDoc = {
+      userId: userId,
+      items: items.map(item => ({
+        id: item.id,
+        title: item.title,
+        author: item.author || 'غير معروف',
+        price: item.price,
+        pdfFile: item.pdfFile,
+        pdfUrl: item.pdfUrl,
+        coverImage: item.coverImage,
+        coverUrl: item.coverUrl,
+        category: item.category,
+        sku: item.sku,
+      })),
+      total: total,
+      customerInfo: {
+        firstName: customerInfo.firstName,
+        lastName: customerInfo.lastName,
+        email: customerInfo.email,
+        phone: customerInfo.phone,
+        address: customerInfo.address,
+        city: customerInfo.city,
+        postalCode: customerInfo.postalCode,
+      },
+      purchaseDate: purchaseDate,
+      transactionId: transactionId,
+      revenueCatInfo: revenueCatInfo || {},
+      createdAt: new Date().toISOString(),
+      paymentMethod: 'RevenueCat IAP',
+    };
+
+    // Save to purchases collection
+    const purchasesRef = collection(db, 'purchases');
+    await addDoc(purchasesRef, purchaseDoc);
+
+    // Also save to user's purchases subcollection
+    const userPurchasesRef = collection(db, 'users', userId, 'purchases');
+    await addDoc(userPurchasesRef, purchaseDoc);
+
+    // Save each individual book purchase for easier querying
+    for (const item of items) {
+      const bookPurchaseRef = collection(db, 'users', userId, 'purchasedBooks');
+      await addDoc(bookPurchaseRef, {
+        bookId: item.id,
+        title: item.title,
+        author: item.author,
+        price: item.price,
+        pdfFile: item.pdfFile,
+        pdfUrl: item.pdfUrl,
+        coverImage: item.coverImage,
+        coverUrl: item.coverUrl,
+        category: item.category,
+        sku: item.sku,
+        purchasedAt: purchaseDate,
+        transactionId: transactionId,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    console.log('Purchase saved to Firestore successfully');
+  } catch (error) {
+    console.error('Error saving purchase to Firestore:', error);
+    throw error;
+  }
 };
 
 

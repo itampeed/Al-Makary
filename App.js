@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, View } from 'react-native';
 import SplashScreen from './components/SplashScreen';
@@ -32,14 +32,20 @@ import Lecture10 from './screens/LectureScreens/Lecture10';
 import { CartProvider } from './contexts/CartContext';
 import { AuthProvider } from './contexts/AuthContext';
 import Colors from './constants/Colors';
-import { Linking } from 'react-native';
-import { RETURN_SUCCESS_URL } from './config/stripe';
+import { initializeRevenueCat } from './services/revenuecat';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [history, setHistory] = useState(['home']);
   const currentScreen = history[history.length - 1];
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+
+  // Initialize RevenueCat when app starts
+  useEffect(() => {
+    initializeRevenueCat().catch((error) => {
+      console.error('Failed to initialize RevenueCat:', error);
+    });
+  }, []);
 
   const handleSplashFinish = () => {
     setIsLoading(false);
@@ -60,16 +66,6 @@ export default function App() {
   const handleToggleMenu = () => {
     setIsMenuVisible(prev => !prev);
   };
-  React.useEffect(() => {
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      if (!url) return;
-      if (url.startsWith(RETURN_SUCCESS_URL)) {
-        // After Stripe success, go to purchased
-        setHistory(prev => [...prev, 'purchased']);
-      }
-    });
-    return () => sub.remove();
-  }, []);
 
   const handleCloseMenu = () => {
     setIsMenuVisible(false);

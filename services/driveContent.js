@@ -1,4 +1,5 @@
 import { buildDownloadUrl, hasValidDriveConfig, DRIVE_FOLDERS, STRUCTURE_FILE_ID, STRUCTURE_FILE_URL, driveApi, isDriveListingAvailable, PARENT_FOLDER_ID } from '../config/drive';
+import { getSupabaseImageUrl } from '../config/supabase';
 
 const extractDriveId = (maybeUrl) => {
   if (!maybeUrl || typeof maybeUrl !== 'string') return null;
@@ -101,22 +102,35 @@ export const fetchCatalogFromDrive = async () => {
     fetchCoversIndex(),
     fetchBooksIndex(),
   ]);
-  const books = (catalog.books || []).map((b, i) => ({
-    id: b.id || `bk-${i + 1}`,
-    title: b.title || b.displayName,
-    author: b.author || 'غير معروف',
-    price: b.price || 0,
-    description: b.description || '',
-    category: b.category || 'عام',
-    language: b.language || 'عربي',
-    pages: b.pages || 0,
-    sku: b.sku,
-    // Accept either IDs or URLs directly in JSON
-    coverImage: b.coverImage,
-    coverUrl: normalizeDriveUrl(b.coverUrl) || normalizeDriveUrl(b.coverId) || (covers[b.coverImage] || null),
-    pdfFile: b.pdfFile,
-    pdfUrl: normalizeDriveUrl(b.pdfUrl) || normalizeDriveUrl(b.pdfId) || (pdfs[b.pdfFile] || null),
-  }));
+  const books = (catalog.books || []).map((b, i) => {
+    // Prioritize Supabase for cover images if coverImage filename is provided
+    let coverUrl = null;
+    if (b.coverImage) {
+      // Try Supabase first
+      coverUrl = getSupabaseImageUrl(b.coverImage);
+    }
+    // Fallback to Drive URLs if Supabase URL is not available
+    if (!coverUrl) {
+      coverUrl = normalizeDriveUrl(b.coverUrl) || normalizeDriveUrl(b.coverId) || (covers[b.coverImage] || null);
+    }
+    
+    return {
+      id: b.id || `bk-${i + 1}`,
+      title: b.title || b.displayName,
+      author: b.author || 'غير معروف',
+      price: b.price || 0,
+      description: b.description || '',
+      category: b.category || 'عام',
+      language: b.language || 'عربي',
+      pages: b.pages || 0,
+      sku: b.sku,
+      // Accept either IDs or URLs directly in JSON
+      coverImage: b.coverImage,
+      coverUrl: coverUrl,
+      pdfFile: b.pdfFile,
+      pdfUrl: normalizeDriveUrl(b.pdfUrl) || normalizeDriveUrl(b.pdfId) || (pdfs[b.pdfFile] || null),
+    };
+  });
   return { books };
 };
 
