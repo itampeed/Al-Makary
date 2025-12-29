@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { firebaseAuth } from '../config/firebase';
+import { loginToRevenueCat, logoutFromRevenueCat } from '../services/revenuecat';
 
 const AuthContext = createContext();
 
@@ -61,7 +62,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const savedUser = await AsyncStorage.getItem('user');
       if (savedUser) {
-        dispatch({ type: 'LOGIN_SUCCESS', payload: JSON.parse(savedUser) });
+        const parsedUser = JSON.parse(savedUser);
+        dispatch({ type: 'LOGIN_SUCCESS', payload: parsedUser });
+        
+        // Identify user in RevenueCat
+        if (parsedUser.uid) {
+            loginToRevenueCat(parsedUser.uid);
+        }
       }
     } catch (error) {
       console.error('Error loading auth state:', error);
@@ -84,6 +91,12 @@ export const AuthProvider = ({ children }) => {
         // Save to storage
         await AsyncStorage.setItem('user', JSON.stringify(result.user));
         dispatch({ type: 'LOGIN_SUCCESS', payload: result.user });
+        
+        // Identify user in RevenueCat
+        if (result.user.uid) {
+            await loginToRevenueCat(result.user.uid);
+        }
+
         return { success: true };
       } else {
         dispatch({ type: 'LOGIN_FAILURE', payload: result.error });
@@ -121,6 +134,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await firebaseAuth.signOut();
       await AsyncStorage.removeItem('user');
+      await logoutFromRevenueCat(); // Reset RevenueCat identity
       dispatch({ type: 'LOGOUT' });
     } catch (error) {
       console.error('Error logging out:', error);

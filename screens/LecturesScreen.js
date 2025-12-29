@@ -3,22 +3,25 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
-
-// Sample 10 books
-const Lectures = [
-  { id: 2, cover: require('../assets/book2.jpg'), title: 'كتاب الكنيسة والعذراء مريم' },
-  { id: 1, cover: require('../assets/book1.jpg'), title: 'كتاب 1يسوع المسيح وتعاليمه' },
-  { id: 4, cover: require('../assets/book4.jpg'), title: 'كتاب قوانين الكنيسة' },
-  { id: 3, cover: require('../assets/book3.jpg'), title: 'الإيمان والعقيدة' },
-  { id: 6, cover: require('../assets/book2.jpg'), title: 'أسرار الكنيسة' },
-  { id: 5, cover: require('../assets/book1.jpg'), title: 'صلوات الكنيسة' },
-  { id: 8, cover: require('../assets/book4.jpg'), title: 'أعياد الكنيسة' },
-  { id: 7, cover: require('../assets/book3.jpg'), title: 'أصوام الكنيسة' },
-  { id: 10, cover: require('../assets/book2.jpg'), title: 'الأبحاث وموضوعات عامة' },
-  { id: 9, cover: require('../assets/book1.jpg'), title: 'التَّاريخ اللِّيتورجي لكنيسة الإسكندريَّة' },
-];
+import { useLanguage } from '../contexts/LanguageContext';
 
 const LecturesScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
+  const { t } = useLanguage();
+
+  // Sample 10 books
+  const Lectures = [
+    { id: 2, cover: require('../assets/book2.jpg'), titleKey: 'lecture2Title' },
+    { id: 1, cover: require('../assets/book1.jpg'), titleKey: 'lecture1Title' },
+    { id: 4, cover: require('../assets/book4.jpg'), titleKey: 'lecture4Title' },
+    { id: 3, cover: require('../assets/book3.jpg'), titleKey: 'lecture3Title' },
+    { id: 6, cover: require('../assets/book2.jpg'), titleKey: 'lecture6Title' },
+    { id: 5, cover: require('../assets/book1.jpg'), titleKey: 'lecture5Title' },
+    { id: 8, cover: require('../assets/book4.jpg'), titleKey: 'lecture8Title' },
+    { id: 7, cover: require('../assets/book3.jpg'), titleKey: 'lecture7Title' },
+    { id: 10, cover: require('../assets/book2.jpg'), titleKey: 'lecture10Title' },
+    { id: 9, cover: require('../assets/book1.jpg'), titleKey: 'lecture9Title' },
+  ];
+
   const handleBookPress = (book) => {
     const mapping = {
       1: 'lecture-1',
@@ -50,7 +53,7 @@ const LecturesScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
     >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>محاضرات الراهب أثناسيوس المقاري</Text>
+          <Text style={styles.title}>{t('lecturesTitle')}</Text>
         </View>
         
         {/* Books Grid */}
@@ -62,7 +65,7 @@ const LecturesScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
               onPress={() => handleBookPress(book)}
             >
               <Image source={book.cover} style={styles.bookCover} resizeMode="cover" />
-              <Text style={styles.bookTitle}>{book.title}</Text>
+              <Text style={styles.bookTitle}>{t(book.titleKey)}</Text>
             </TouchableOpacity>
           ))}
         </View>

@@ -4,9 +4,11 @@ import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const { isAuthenticated, user, login, register, logout, isLoading, error, clearError } = useAuth();
+  const { t, isRTL } = useLanguage();
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
     email: '',
@@ -64,7 +66,7 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
 
     const result = await login(formData.email, formData.password);
     if (result.success) {
-      Alert.alert('Logged in', 'Welcome!');
+      Alert.alert(t('loggedInSuccess'), t('welcome'));
     } else {
       Alert.alert('Login error', result.error || 'An unexpected error occurred');
     }
@@ -98,11 +100,11 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
 
   const handleLogout = () => {
     Alert.alert(
-      'Sign out',
-      'Do you want to sign out?',
+      t('signOut'),
+      t('signOut'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign out', style: 'destructive', onPress: logout }
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('signOut'), style: 'destructive', onPress: logout }
       ]
     );
   };
@@ -116,57 +118,53 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
   const renderLoginForm = () => (
     <View style={styles.formContainer}>
       <Text style={styles.formTitle}>
-        {isLoginMode ? 'Sign in' : 'Create a new account'}
+        {isLoginMode ? t('signIn') : t('createAccount')}
       </Text>
       
       {!isLoginMode && (
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Full name *</Text>
+          <Text style={[styles.inputLabel, isRTL ? styles.textRight : styles.textLeft]}>{t('fullName')} *</Text>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, isRTL ? styles.textRight : styles.textLeft]}
             value={formData.name}
             onChangeText={(value) => handleInputChange('name', value)}
-            placeholder="Enter your full name"
-            textAlign="right"
+            placeholder={t('fullName')}
           />
         </View>
       )}
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Email *</Text>
+        <Text style={[styles.inputLabel, isRTL ? styles.textRight : styles.textLeft]}>{t('emailLabel')} *</Text>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, isRTL ? styles.textRight : styles.textLeft]}
           value={formData.email}
           onChangeText={(value) => handleInputChange('email', value)}
           placeholder="example@email.com"
           keyboardType="email-address"
           autoCapitalize="none"
-          textAlign="right"
         />
       </View>
 
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Password *</Text>
+        <Text style={[styles.inputLabel, isRTL ? styles.textRight : styles.textLeft]}>{t('passwordLabel')} *</Text>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, isRTL ? styles.textRight : styles.textLeft]}
           value={formData.password}
           onChangeText={(value) => handleInputChange('password', value)}
-            placeholder="Enter your password"
+          placeholder={t('passwordLabel')}
           secureTextEntry
-          textAlign="right"
         />
       </View>
 
       {!isLoginMode && (
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Confirm password *</Text>
+          <Text style={[styles.inputLabel, isRTL ? styles.textRight : styles.textLeft]}>{t('confirmPasswordLabel')} *</Text>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, isRTL ? styles.textRight : styles.textLeft]}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
-            placeholder="Confirm your password"
+            placeholder={t('confirmPasswordLabel')}
             secureTextEntry
-            textAlign="right"
           />
         </View>
       )}
@@ -184,17 +182,17 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       >
         <Text style={styles.submitButtonText}>
           {isLoading 
-            ? 'Processing...'
+            ? t('processing')
             : isLoginMode 
-              ? 'Sign in' 
-              : 'Create account'
+              ? t('signIn') 
+              : t('createAccount')
           }
         </Text>
       </TouchableOpacity>
 
       {isLoginMode && (
         <TouchableOpacity style={styles.forgotButton} onPress={() => { setForgotEmail(formData.email); setForgotVisible(true); }}>
-          <Text style={styles.forgotText}>Forgot password?</Text>
+          <Text style={styles.forgotText}>{t('forgotPassword')}</Text>
         </TouchableOpacity>
       )}
 
@@ -204,8 +202,8 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       >
         <Text style={styles.toggleButtonText}>
           {isLoginMode 
-            ? 'Don\'t have an account? Create one' 
-            : 'Already have an account? Sign in'
+            ? t('toggleSignUp') 
+            : t('toggleSignIn')
           }
         </Text>
       </TouchableOpacity>
@@ -215,32 +213,32 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
   const renderUserProfile = () => (
     <View style={styles.profileContainer}>
       <View style={styles.welcomeContainer}>
-        <Text style={styles.welcomeText}>مرحباً بك!</Text>
+        <Text style={styles.welcomeText}>{t('welcome')}</Text>
         <Text style={styles.userEmail}>{user?.email}</Text>
-        <Text style={styles.loggedInText}>تم تسجيل الدخول بنجاح</Text>
+        <Text style={styles.loggedInText}>{t('loggedInSuccess')}</Text>
       </View>
 
       <View style={styles.featuresContainer}>
-        <Text style={styles.featuresTitle}>ما يمكنك فعله:</Text>
+        <Text style={[styles.featuresTitle, isRTL ? styles.textRight : styles.textLeft]}>{t('whatYouCanDo')}</Text>
         
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>📚</Text>
-          <Text style={styles.featureText}>تصفح وشراء الكتب الروحية</Text>
+        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
+          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>📚</Text>
+          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureBrowse')}</Text>
         </View>
         
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🎧</Text>
-          <Text style={styles.featureText}>الاستماع للمحاضرات والتأملات</Text>
+        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
+          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>🎧</Text>
+          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureListen')}</Text>
         </View>
         
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>📖</Text>
-          <Text style={styles.featureText}>قراءة الكتب والمقالات</Text>
+        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
+          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>📖</Text>
+          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureRead')}</Text>
         </View>
         
-        <View style={styles.featureItem}>
-          <Text style={styles.featureIcon}>🛒</Text>
-          <Text style={styles.featureText}>إتمام عمليات الشراء بسهولة</Text>
+        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
+          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>🛒</Text>
+          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureBuy')}</Text>
         </View>
       </View>
 
@@ -248,14 +246,14 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
         style={styles.shopButton}
         onPress={() => onNavigate('shop')}
       >
-        <Text style={styles.shopButtonText}>تسوق الآن</Text>
+        <Text style={styles.shopButtonText}>{t('shopNow')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
         style={styles.logoutButton}
         onPress={handleLogout}
       >
-        <Text style={styles.logoutButtonText}>تسجيل الخروج</Text>
+        <Text style={styles.logoutButtonText}>{t('signOut')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -282,7 +280,7 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
           showsVerticalScrollIndicator={true}
         >
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>حسابي</Text>
+          <Text style={styles.title}>{t('myAccountTitle')}</Text>
         </View>
         
         {isAuthenticated ? renderUserProfile() : renderLoginForm()}
@@ -295,13 +293,13 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
       <ThemedModal
         visible={forgotVisible}
         onRequestClose={() => setForgotVisible(false)}
-        title="Reset password"
+        title={t('resetPassword')}
         primaryAction={{
-          label: forgotLoading ? 'Sending...' : 'Send email',
+          label: forgotLoading ? t('processing') : t('sendEmail'),
           disabled: forgotLoading,
           onPress: async () => {
             if (!forgotEmail.trim()) {
-              Alert.alert('Invalid email', 'Please enter your email');
+              Alert.alert(t('invalidEmail'), t('enterEmail'));
               return;
             }
             setForgotLoading(true);
@@ -309,7 +307,7 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
               const { sendPasswordResetEmail } = require('../config/firebase').firebaseAuth;
               const res = await sendPasswordResetEmail(forgotEmail.trim());
               if (res.success) {
-                Alert.alert('Email sent', 'Check your inbox for a reset link');
+                Alert.alert(t('emailSent'), t('checkInbox'));
                 setForgotVisible(false);
               } else {
                 Alert.alert('Reset failed', res.error || 'Unable to send reset email');
@@ -322,19 +320,18 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
           }
         }}
         secondaryAction={{
-          label: 'Cancel',
+          label: t('cancel'),
           onPress: () => setForgotVisible(false),
         }}
       >
-        <Text style={styles.modalHint}>Enter your account email and we will send a reset link.</Text>
+        <Text style={styles.modalHint}>{t('enterEmail')}</Text>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, isRTL ? styles.textRight : styles.textLeft]}
           value={forgotEmail}
           onChangeText={setForgotEmail}
           placeholder="email@example.com"
           keyboardType="email-address"
           autoCapitalize="none"
-          textAlign="right"
         />
       </ThemedModal>
     </Layout>
@@ -390,7 +387,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: Colors.text,
     marginBottom: 8,
-    textAlign: 'right',
   },
   textInput: {
     borderWidth: 1,
@@ -499,23 +495,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.header,
     marginBottom: 16,
-    textAlign: 'right',
   },
   featureItem: {
-    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
     paddingVertical: 8,
   },
   featureIcon: {
     fontSize: 20,
-    marginRight: 12,
   },
   featureText: {
     fontSize: 16,
     color: Colors.text,
     flex: 1,
-    textAlign: 'right',
   },
   shopButton: {
     backgroundColor: Colors.header,
@@ -598,6 +590,24 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  textRight: {
+      textAlign: 'right',
+  },
+  textLeft: {
+      textAlign: 'left',
+  },
+  row: {
+      flexDirection: 'row',
+  },
+  rowReverse: {
+      flexDirection: 'row-reverse',
+  },
+  mr12: {
+      marginRight: 12,
+  },
+  ml12: {
+      marginLeft: 12,
   },
 });
 

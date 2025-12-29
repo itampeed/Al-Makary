@@ -159,7 +159,7 @@ export const getCustomerInfo = async () => {
  */
 export const hasActiveEntitlement = async (entitlementId) => {
   try {
-    const customerInfo = await Purchases.getCustomerInfo();
+    const { customerInfo } = await Purchases.getCustomerInfo();
     return customerInfo.entitlements.active[entitlementId] !== undefined;
   } catch (error) {
     console.error('Error checking entitlement:', error);
@@ -168,48 +168,29 @@ export const hasActiveEntitlement = async (entitlementId) => {
 };
 
 /**
- * Create a consumable purchase for a specific amount
- * This creates a one-time purchase for the cart total
+ * Log in to RevenueCat with a specific user ID
+ * @param {string} userId - The Firebase User ID
  */
-export const purchaseCartTotal = async (totalAmount, items) => {
+export const loginToRevenueCat = async (userId) => {
   try {
-    // For dynamic pricing, you might need to create products in RevenueCat
-    // with different price points, or use a single product and handle pricing server-side
-    
-    // Option 1: Use a single product ID (you'll need to create this in RevenueCat)
-    // The price will be set in RevenueCat dashboard
-    const productId = `cart_total_${Math.round(totalAmount * 100)}`; // Price in cents
-    
-    // Option 2: Use a predefined product and pass metadata
-    // This requires setting up products in RevenueCat dashboard first
-    
-    // For now, we'll try to find a matching package or create a purchase
-    const offerings = await Purchases.getOfferings();
-    
-    if (offerings.current && offerings.current.availablePackages.length > 0) {
-      // Use the first available package (you should configure this properly)
-      const packageToPurchase = offerings.current.availablePackages[0];
-      
-      // Add metadata about the purchase
-      await Purchases.setAttributes({
-        cart_total: totalAmount.toString(),
-        cart_items: JSON.stringify(items.map(item => ({
-          id: item.id,
-          title: item.title,
-          price: item.price,
-        }))),
-      });
-      
-      return await purchasePackage(packageToPurchase);
-    } else {
-      throw new Error('No packages available for purchase');
-    }
+    const { customerInfo } = await Purchases.logIn(userId);
+    console.log('RevenueCat login success:', customerInfo);
+    return customerInfo;
   } catch (error) {
-    return {
-      success: false,
-      cancelled: false,
-      error: error.message || 'Purchase failed',
-    };
+    console.error('RevenueCat login error:', error);
+    // Don't throw, just log. Subscription features might be limited but app shouldn't crash.
   }
 };
 
+/**
+ * Log out from RevenueCat (resets to anonymous ID)
+ */
+export const logoutFromRevenueCat = async () => {
+  try {
+    const { customerInfo } = await Purchases.logOut();
+    console.log('RevenueCat logout success');
+    return customerInfo;
+  } catch (error) {
+    console.error('RevenueCat logout error:', error);
+  }
+};

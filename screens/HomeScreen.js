@@ -1,13 +1,8 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, RefreshControl, Linking } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import * as Updates from 'expo-updates';
-import Layout from '../components/Layout';
-import Footer from '../components/Footer';
-import Colors from '../constants/Colors';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, isMenuVisible, onCloseMenu }) => {
   const [refreshing, setRefreshing] = React.useState(false);
+  const { t } = useLanguage();
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -43,7 +38,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
-              <Text style={styles.sectionText}>الكتب</Text>
+              <Text style={styles.sectionText}>{t('library')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -54,7 +49,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('lectures')}>
-              <Text style={styles.sectionText}>مخطوطات و مراجع الكتب</Text>
+              <Text style={styles.sectionText}>{t('manuscripts')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -65,7 +60,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => Linking.openURL('https://www.amazon.com/s?i=stripbooks&rh=p_27%3AFr.%2BAthanasius%2Bal-Makary&s=relevancerank&text=Fr.+Athanasius+al-Makary&ref=dp_byline_sr_book_1')}>
-              <Text style={styles.sectionText}>كتب مترجمة للإنجليزية</Text>
+              <Text style={styles.sectionText}>{t('translatedBooks')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -76,7 +71,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
-              <Text style={styles.sectionText}>المحاضرات</Text>
+              <Text style={styles.sectionText}>{t('lectures')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -87,7 +82,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
-              <Text style={styles.sectionText}>مختارات من المحاضرات</Text>
+              <Text style={styles.sectionText}>{t('selectedLectures')}</Text>
             </TouchableOpacity>
           </View>
 
@@ -98,13 +93,13 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               resizeMode="cover"
             />
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
-              <Text style={styles.sectionText}>قداسات و ألحان</Text>
+              <Text style={styles.sectionText}>{t('liturgiesAndHymns')}</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.socialsContainer}>
-          <Text style={styles.socialsTitle}>تابعنا</Text>
+          <Text style={styles.socialsTitle}>{t('followUs')}</Text>
           <View style={styles.socialsRow}>
             <TouchableOpacity style={styles.socialIconButton} onPress={() => Linking.openURL('https://facebook.com')}>
               <Ionicons name="logo-facebook" size={28} color={Colors.header} />

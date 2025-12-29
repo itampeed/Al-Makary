@@ -10,11 +10,7 @@ import ReturnPolicyScreen from './screens/ReturnPolicyScreen';
 import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import ContactScreen from './screens/ContactScreen';
 import MyAccountScreen from './screens/MyAccountScreen';
-import ShoppingCartScreen from './screens/ShoppingCartScreen';
-import CheckoutScreen from './screens/CheckoutScreen';
-import ShopScreen from './screens/ShopScreen';
-import PurchasedScreen from './screens/PurchasedScreen';
-import BookReaderScreen from './screens/BookReaderScreen';
+import SubscriptionScreen from './screens/SubscriptionScreen';
 import FirstBookScreen from './screens/booksscreen/First';
 import SecondBookScreen from './screens/booksscreen/Second';
 import ThirdBookScreen from './screens/booksscreen/Third';
@@ -29,114 +25,33 @@ import Lecture7 from './screens/LectureScreens/Lecture7';
 import Lecture8 from './screens/LectureScreens/Lecture8';
 import Lecture9 from './screens/LectureScreens/Lecture9';
 import Lecture10 from './screens/LectureScreens/Lecture10';
-import { CartProvider } from './contexts/CartContext';
-import { AuthProvider } from './contexts/AuthContext';
-import Colors from './constants/Colors';
+import BookReaderScreen from './screens/BookReaderScreen';
 import { initializeRevenueCat } from './services/revenuecat';
+import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
-  const [history, setHistory] = useState(['home']);
-  const currentScreen = history[history.length - 1];
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  // ... (rest of state items are unchanged)
 
-  // Initialize RevenueCat when app starts
+  // ... (rest of functions are unchanged)
+
   useEffect(() => {
-    initializeRevenueCat().catch((error) => {
-      console.error('Failed to initialize RevenueCat:', error);
-    });
+    // Initialize RevenueCat anonymously on app launch
+    // AuthContext will handle identifying the user later if they are logged in
+    const initRC = async () => {
+        try {
+            await initializeRevenueCat(); 
+        } catch (e) {
+            console.log("Failed to init RC", e);
+        }
+    };
+    initRC();
   }, []);
 
-  const handleSplashFinish = () => {
-    setIsLoading(false);
-  };
-
-  const handleNavigate = (screenKey) => {
-    setHistory(prev => [...prev, screenKey]);
-  };
-
-  const handleBack = () => {
-    setHistory(prev => {
-      if (prev.length <= 1) return prev;
-      const next = prev.slice(0, -1);
-      return next;
-    });
-  };
-
-  const handleToggleMenu = () => {
-    setIsMenuVisible(prev => !prev);
-  };
-
-  const handleCloseMenu = () => {
-    setIsMenuVisible(false);
-  };
-
-  const renderCurrentScreen = () => {
-    switch (currentScreen) {
-      case 'home':
-        return <HomeScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'about':
-        return <AboutScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'shop':
-        return <ShopScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lectures':
-        return <LecturesScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-1':
-        return <Lecture1 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-2':
-        return <Lecture2 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-3':
-        return <Lecture3 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-4':
-        return <Lecture4 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-5':
-        return <Lecture5 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-6':
-        return <Lecture6 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-7':
-        return <Lecture7 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-8':
-        return <Lecture8 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-9':
-        return <Lecture9 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'lecture-10':
-        return <Lecture10 onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'library':
-        return <LibraryScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'book-first':
-        return <FirstBookScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'book-second':
-        return <SecondBookScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'book-third':
-        return <ThirdBookScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'book-fourth':
-        return <FourthBookScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'return-policy':
-        return <ReturnPolicyScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'privacy-policy':
-        return <PrivacyPolicyScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'contact':
-        return <ContactScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'account':
-        return <MyAccountScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'cart':
-        return <ShoppingCartScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'checkout':
-        return <CheckoutScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      case 'purchased':
-        return <PurchasedScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-      default:
-        // Support pseudo-route for reader:localUri
-        if (currentScreen.startsWith('reader:')) {
-          return <BookReaderScreen routeParam={currentScreen} onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={true} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-        }
-        return <HomeScreen onNavigate={handleNavigate} currentScreen={currentScreen} onBack={handleBack} showBack={currentScreen !== 'home'} onMenuPress={handleToggleMenu} isMenuVisible={isMenuVisible} onCloseMenu={handleCloseMenu} />;
-    }
-  };
-
   return (
-    <AuthProvider>
-      <CartProvider>
+    <LanguageProvider>
+      <AuthProvider>
         <View style={styles.container}>
           <StatusBar style="light" backgroundColor={Colors.header} />
           {isLoading ? (
@@ -145,8 +60,8 @@ export default function App() {
             renderCurrentScreen()
           )}
         </View>
-      </CartProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </LanguageProvider>
   );
 }
 

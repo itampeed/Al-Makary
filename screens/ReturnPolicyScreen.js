@@ -3,8 +3,11 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ReturnPolicyScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
+  const { t, isRTL } = useLanguage();
+
   return (
     <Layout 
       onMenuPress={onMenuPress} 
@@ -18,59 +21,52 @@ const ReturnPolicyScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
       <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
         {/* Page Title */}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>سياسة الاسترجاع والاستبدال</Text>
+          <Text style={styles.title}>{t('returnPolicyTitle')}</Text>
         </View>
         
         {/* Main Content */}
         <View style={styles.contentContainer}>
-          <Text style={styles.heading}>سياسة البيع</Text>
+          <Text style={[styles.heading, isRTL ? styles.textRight : styles.textLeft]}>{t('salesPolicyHeading')}</Text>
 
-          <Text style={styles.subheading}>1. شراء الكتب:</Text>
-          <Text style={styles.text}>
-            يمكن شراء الكتب من خلال الموقع الإلكتروني عبر الخطوات البسيطة المتاحة.
-            بعد إضافة الكتب إلى السلة، يمكنك مراجعة الطلب وإكمال عملية الدفع.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('salesPolicySub1')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('salesPolicyText1')}
           </Text>
 
-          <Text style={styles.subheading}>2. طرق الدفع:</Text>
-          <Text style={styles.text}>
-            نقبل الدفع عبر بطاقات الائتمان (فيزا، ماستر كارد).
-            الدفع عبر التحويل البنكي متاح أيضًا، ولكن يتم تأكيد الطلب بعد استلام الدفعة.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('salesPolicySub2')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('salesPolicyText2')}
           </Text>
 
-          <Text style={styles.subheading}>3. التوصيل والشحن:</Text>
-          <Text style={styles.text}>
-            نقوم بشحن الطلبات محليًا ودوليًا.
-            تختلف مدة التوصيل حسب الموقع الجغرافي، ويتم تزويدك بتفاصيل الشحن وتقدير مدة التوصيل عند إتمام الطلب.
-            رسوم الشحن تحتسب بناءً على الوجهة ووزن الكتب.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('salesPolicySub3')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('salesPolicyText3')}
           </Text>
 
-          <Text style={styles.heading}>سياسة الاسترداد</Text>
+          <Text style={[styles.heading, isRTL ? styles.textRight : styles.textLeft]}>{t('returnPolicyHeading')}</Text>
 
-          <Text style={styles.subheading}>1. الإرجاع والاستبدال:</Text>
-          <Text style={styles.text}>
-            يمكنك إرجاع الكتب أو استبدالها خلال 14 يومًا من استلام الطلب.
-            يجب أن تكون الكتب بحالة جديدة وغير مستخدمة، مع الحفاظ على التغليف الأصلي.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('returnPolicySub1')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('returnPolicyText1')}
           </Text>
 
-          <Text style={styles.subheading}>2. عملية الاسترداد:</Text>
-          <Text style={styles.text}>
-            للتقدم بطلب إرجاع أو استبدال، يرجى الاتصال بخدمة العملاء عبر البريد الإلكتروني أو الهاتف.
-            سيُطلب منك تزويدنا بتفاصيل الطلب وصورة من الفاتورة.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('returnPolicySub2')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('returnPolicyText2')}
           </Text>
 
-          <Text style={styles.subheading}>3. استرداد الأموال:</Text>
-          <Text style={styles.text}>
-            بعد استلام الكتب المرتجعة والتحقق من حالتها، سنقوم بمعالجة استرداد الأموال إلى طريقة الدفع الأصلية.
-            قد يستغرق الاسترداد من 5 إلى 10 أيام عمل للوصول إلى حسابك.
+          <Text style={[styles.subheading, isRTL ? styles.textRight : styles.textLeft]}>{t('returnPolicySub3')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('returnPolicyText3')}
           </Text>
 
-          <Text style={styles.heading}>الاتصال بنا</Text>
-          <Text style={styles.text}>
-            إذا كان لديك أي استفسارات أو تحتاج إلى مساعدة إضافية، يرجى التواصل معنا عبر:
+          <Text style={[styles.heading, isRTL ? styles.textRight : styles.textLeft]}>{t('contactUsHeading')}</Text>
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('contactUsText')}
           </Text>
 
-          <Text style={styles.contact}>info@athanasiusalmakary.com</Text>
-          <Text style={styles.contact}>+201229574466</Text>
+          <Text style={[styles.contact, isRTL ? styles.textRight : styles.textLeft]}>info@athanasiusalmakary.com</Text>
+          <Text style={[styles.contact, isRTL ? styles.textRight : styles.textLeft]}>+201229574466</Text>
         </View>
 
         <Footer />
@@ -103,14 +99,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: Colors.header,
-    textAlign: 'right',
     marginBottom: 10,
     lineHeight: 30,
   },
   subheading: {
     fontSize: 18,
     fontWeight: '600',
-    textAlign: 'right',
     color: 'gray',
     marginTop: 10,
     marginBottom: 5,
@@ -118,15 +112,19 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     color: Colors.text,
-    textAlign: 'right',
     lineHeight: 28,
     marginBottom: 10,
   },
   contact: {
     fontSize: 16,
     color: Colors.text,
-    textAlign: 'right',
     lineHeight: 26,
+  },
+  textRight: {
+      textAlign: 'right',
+  },
+  textLeft: {
+      textAlign: 'left',
   },
 });
 

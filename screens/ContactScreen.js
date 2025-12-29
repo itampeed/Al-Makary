@@ -4,6 +4,7 @@ import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const ContactScreen = ({
   onMenuPress,
@@ -14,6 +15,7 @@ const ContactScreen = ({
   onBack,
   showBack
 }) => {
+  const { t, isRTL } = useLanguage();
 
   const handleCall = () => {
     Linking.openURL('tel:+201001116618');
@@ -35,15 +37,15 @@ const ContactScreen = ({
     >
       <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>للتواصل معنا</Text>
+          <Text style={styles.title}>{t('contactTitle')}</Text>
         </View>
 
         <View style={styles.contentContainer}>
-          <Text style={styles.text}>
-            للكتب يُطلب من{'\n'} مكتبة مجلَّة مرقس القاهرة:{'\n'} 28 شارع شبرا - القاهرة
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('contactAddress')}
           </Text>
-          <Text style={styles.text}>
-            25770614 والمكتبات {'\n'} المسيحيَّة والكنسيَّة كما {'\n'} يُطلب من الأستاذ المحاسب {'\n'} مينا سمير أنطون
+          <Text style={[styles.text, isRTL ? styles.textRight : styles.textLeft]}>
+            {t('contactPerson')}
           </Text>
 
           <View style={styles.buttonsRow}>
@@ -86,8 +88,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     lineHeight: 24,
-    textAlign: 'right',
     width: '100%',
+  },
+  textRight: {
+      textAlign: 'right',
+  },
+  textLeft: {
+      textAlign: 'left',
   },
   buttonsRow: {
     flexDirection: 'row',

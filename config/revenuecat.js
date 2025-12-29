@@ -5,7 +5,7 @@ import { Platform } from 'react-native';
 // RevenueCat API Keys
 // Replace with your actual API keys from RevenueCat dashboard
 export const REVENUECAT_API_KEY_IOS = 'YOUR_IOS_API_KEY_HERE';
-export const REVENUECAT_API_KEY_ANDROID = 'YOUR_ANDROID_API_KEY_HERE';
+export const REVENUECAT_API_KEY_ANDROID = 'goog_FOaGiaDlGnoklwaytqJbGtQSOtZ';
 
 // Platform detection helper
 export const getRevenueCatApiKey = () => {
@@ -23,6 +23,14 @@ export const PRODUCT_IDS = {
   // Example: Create products in RevenueCat with these IDs
   // You can create products based on price tiers or individual book purchases
   BOOK_PURCHASE: 'book_purchase', // Replace with your actual product ID
+};
+
+// Entitlement IDs - These must match what you configured in RevenueCat
+export const ENTITLEMENT_IDS = {
+  SERIES_1: 'series_1',
+  SERIES_2: 'series_2',
+  SERIES_3: 'series_3',
+  SERIES_4: 'series_4',
 };
 
 export default {
