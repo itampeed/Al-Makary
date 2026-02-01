@@ -82,24 +82,24 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
         { key: 'book-fourth', text: t('series4') },
       ]
     },
-    { 
-      key: 'lectures', 
-      text: t('lectures'), 
-      icon: 'mic-outline',
-      hasDropdown: true,
-      subItems : [
-        { key: 'lecture-1', text: 'Lecture 1' },
-        { key: 'lecture-2', text: 'Lecture 2' },
-        { key: 'lecture-3', text: 'Lecture 3' },
-        { key: 'lecture-4', text: 'Lecture 4' },
-        { key: 'lecture-5', text: 'Lecture 5' },
-        { key: 'lecture-6', text: 'Lecture 6' },
-        { key: 'lecture-7', text: 'Lecture 7' },
-        { key: 'lecture-8', text: 'Lecture 8' },
-        { key: 'lecture-9', text: 'Lecture 9' },
-        { key: 'lecture-10', text: 'Lecture 10' },
-      ]
-    },
+    // { 
+    //   key: 'lectures', 
+    //   text: t('lectures'), 
+    //   icon: 'mic-outline',
+    //   hasDropdown: true,
+    //   subItems : [
+    //     { key: 'lecture-1', text: 'Lecture 1' },
+    //     { key: 'lecture-2', text: 'Lecture 2' },
+    //     { key: 'lecture-3', text: 'Lecture 3' },
+    //     { key: 'lecture-4', text: 'Lecture 4' },
+    //     { key: 'lecture-5', text: 'Lecture 5' },
+    //     { key: 'lecture-6', text: 'Lecture 6' },
+    //     { key: 'lecture-7', text: 'Lecture 7' },
+    //     { key: 'lecture-8', text: 'Lecture 8' },
+    //     { key: 'lecture-9', text: 'Lecture 9' },
+    //     { key: 'lecture-10', text: 'Lecture 10' },
+    //   ]
+    // },
     { key: 'subscription', text: t('subscription'), icon: 'card-outline' },
     { key: 'return-policy', text: t('returnPolicy'), icon: 'refresh-outline' },
     { key: 'privacy-policy', text: t('privacyPolicy'), icon: 'shield-checkmark-outline' },
@@ -239,11 +239,6 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
           </View>
           
         </ScrollView>
-        <Image 
-            source={require('../assets/logos/logo.png')}
-            style={styles.bottomImage}
-            resizeMode="contain"
-          />
       </Animated.View>
     </View>
   );

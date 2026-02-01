@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Ritual Gem of Fr. Athanasius al-Makary",
-    "slug": "Ritual-Gem-of-Fr.-Athanasius-al-Makary",
+    "name": "Ritual Gem of Fr. Athanasius al-Makary",
+    "slug": "ritual-gem-of-almakary",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,17 +13,25 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ritualgem.naybiltech"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.ritualgem.naybiltech"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ed124068-512a-49cf-a571-f6888a96bb15"
+      }
+    },
+    "owner": "itamped"
   }
 }

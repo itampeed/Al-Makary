@@ -1,3 +1,10 @@
+import React from 'react';
+import { View, Text, Image, TouchableOpacity, ScrollView, RefreshControl, StyleSheet, Linking } from 'react-native';
+import * as Updates from 'expo-updates';
+import { Ionicons } from '@expo/vector-icons';
+import Layout from '../components/Layout';
+import Footer from '../components/Footer';
+import Colors from '../constants/Colors';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, isMenuVisible, onCloseMenu }) => {
