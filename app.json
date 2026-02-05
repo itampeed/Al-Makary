@@ -16,7 +16,10 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.ritualgem.naybiltech",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "buildNumber": "2"
+      "buildNumber": "2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
