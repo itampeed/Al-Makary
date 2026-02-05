@@ -118,6 +118,14 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
     }
   };
 
+  const manageSubscription = () => {
+    if (Platform.OS === 'ios') {
+      Linking.openURL('https://apps.apple.com/account/subscriptions');
+    } else {
+      Linking.openURL('https://play.google.com/store/account/subscriptions');
+    }
+  };
+
   const openLink = (url) => {
     Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
   };
@@ -157,14 +165,14 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
 
              <TouchableOpacity 
                style={[styles.button, isSubscribed ? styles.subscribedButton : null]}
-               onPress={() => !isSubscribed && handleSubscribe(seriesId, pkg)}
-               disabled={isSubscribed || !pkg || processingParams?.seriesId === seriesId}
+               onPress={() => isSubscribed ? manageSubscription() : handleSubscribe(seriesId, pkg)}
+               disabled={!isSubscribed && (!pkg || processingParams?.seriesId === seriesId)}
              >
                {processingParams?.seriesId === seriesId ? (
                  <ActivityIndicator color="#fff" />
                ) : (
                  <Text style={styles.buttonText}>
-                   {isSubscribed ? t('subscribedButton') : t('subscribe')}
+                   {isSubscribed ? (t('manageSubscription') || 'Manage Subscription') : t('subscribe')}
                  </Text>
                )}
              </TouchableOpacity>
@@ -219,11 +227,7 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
           </View>
         )}
 
-             {offerings.length === 0 && Object.keys(activeEntitlements).length === 0 && (
-                <Text style={styles.noDataText}>{t('noBooks')}</Text>
-             )}
-          </View>
-        )}
+
 
         {/* Legal Links (iOS Only) */}
         {Platform.OS === 'ios' && (
