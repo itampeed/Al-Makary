@@ -226,28 +226,14 @@ const MyAccountScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
           <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureBrowse')}</Text>
         </View>
         
-        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
-          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>🎧</Text>
-          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureListen')}</Text>
-        </View>
+
         
         <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
           <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>📖</Text>
           <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureRead')}</Text>
         </View>
         
-        <View style={[styles.featureItem, isRTL ? styles.rowReverse : styles.row]}>
-          <Text style={[styles.featureIcon, isRTL ? styles.ml12 : styles.mr12]}>🛒</Text>
-          <Text style={[styles.featureText, isRTL ? styles.textRight : styles.textLeft]}>{t('featureBuy')}</Text>
-        </View>
       </View>
-
-      <TouchableOpacity 
-        style={styles.shopButton}
-        onPress={() => onNavigate('shop')}
-      >
-        <Text style={styles.shopButtonText}>{t('shopNow')}</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity 
         style={styles.logoutButton}
@@ -509,18 +495,7 @@ const styles = StyleSheet.create({
     color: Colors.text,
     flex: 1,
   },
-  shopButton: {
-    backgroundColor: Colors.header,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  shopButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+
   logoutButton: {
     backgroundColor: '#ff4444',
     paddingVertical: 16,

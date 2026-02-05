@@ -49,7 +49,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
             </TouchableOpacity>
           </View>
 
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <Image 
               source={require('../assets/IMG_32673B75A9C0-21.jpg')} 
               style={styles.sectionImage}
@@ -58,7 +58,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('lectures')}>
               <Text style={styles.sectionText}>{t('manuscripts')}</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <View style={styles.section}>
             <Image 

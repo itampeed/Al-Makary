@@ -6,7 +6,7 @@ import HomeScreen from './screens/HomeScreen';
 import AboutScreen from './screens/AboutScreen';
 import LecturesScreen from './screens/LecturesScreen';
 import LibraryScreen from './screens/LibraryScreen';
-import ReturnPolicyScreen from './screens/ReturnPolicyScreen';
+
 import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
 import ContactScreen from './screens/ContactScreen';
 import MyAccountScreen from './screens/MyAccountScreen';
@@ -121,8 +121,7 @@ export default function App() {
         return <LecturesScreen {...commonProps} />;
       case 'library':
         return <LibraryScreen {...commonProps} />;
-      case 'return-policy':
-        return <ReturnPolicyScreen {...commonProps} />;
+
       case 'privacy-policy':
         return <PrivacyPolicyScreen {...commonProps} />;
       case 'contact':

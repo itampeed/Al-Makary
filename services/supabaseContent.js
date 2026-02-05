@@ -5,41 +5,52 @@ import { fetchProductsJson, getSupabaseImageUrl, getSupabasePdfUrl } from '../co
  * Loads products.json from 'data' bucket, then resolves cover and PDF URLs
  * @returns {Promise<Object>} Object with books array
  */
+const SUPABASE_FILE_BUCKET_URL = 'https://sfcuxyeybuwiunjmrood.supabase.co/storage/v1/object/public/file/products.json';
+const SUPABASE_COVER_BUCKET_URL = 'https://sfcuxyeybuwiunjmrood.supabase.co/storage/v1/object/public/covers/';
+const SUPABASE_BOOK_BUCKET_URL = 'https://sfcuxyeybuwiunjmrood.supabase.co/storage/v1/object/public/books/';
+
+/**
+ * Fetch catalog from Supabase storage
+ * Loads products.json directly from the public URL
+ * @returns {Promise<Array>} Array of book objects
+ */
 export const fetchCatalogFromSupabase = async () => {
-  try {
-    // Fetch products.json from data bucket
-    const productsData = await fetchProductsJson();
-    
-    // Map products to books format with Supabase URLs
-    const books = (productsData.products || []).map((product, i) => {
-      // Get cover URL from cover bucket using image field
-      const coverUrl = product.image ? getSupabaseImageUrl(product.image) : null;
-      
-      // Get PDF URL from books bucket using pdfFile field
-      const pdfUrl = product.pdfFile ? getSupabasePdfUrl(product.pdfFile) : null;
-      
-      return {
-        id: product.id || `bk-${i + 1}`,
-        title: product.title || '',
-        author: product.author || 'غير معروف',
-        price: product.price || 0,
-        description: product.description || '',
-        category: product.category || 'عام',
-        language: product.language || 'عربي',
-        pages: product.pages || 0,
-        sku: product.sku,
-        // Map image field to coverImage for consistency
-        coverImage: product.image,
-        coverUrl: coverUrl,
-        pdfFile: product.pdfFile,
-        pdfUrl: pdfUrl,
-      };
-    });
-    
-    return { books };
-  } catch (error) {
-    console.error('Error fetching catalog from Supabase:', error);
-    throw error;
-  }
+    try {
+        console.log('Fetching catalog from:', SUPABASE_FILE_BUCKET_URL);
+        const response = await fetch(SUPABASE_FILE_BUCKET_URL);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch catalog: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        const products = data.products || [];
+        
+        // Map to internal format
+        const books = products.map((product, index) => {
+            const coverUrl = product.image ? `${SUPABASE_COVER_BUCKET_URL}${product.image}` : null;
+            const pdfUrl = product.pdfFile ? `${SUPABASE_BOOK_BUCKET_URL}${product.pdfFile}` : null;
+
+            return {
+                id: product.id || `bk-${index}`,
+                title: product.title,
+                author: product.author,
+                pages: product.pages,
+                language: product.language,
+                category: product.category,
+                series: product.series,
+                coverUrl: coverUrl,
+                pdfUrl: pdfUrl,
+                pdfFile: product.pdfFile, // Keep original filename refernece if needed
+                description: product.description // In case description exists
+            };
+        });
+
+        console.log(`Fetched ${books.length} books from Supabase`);
+        return books;
+
+    } catch (error) {
+        console.error('Error in fetchCatalogFromSupabase:', error);
+        return []; // Return empty array on error to prevent crashes
+    }
 };
 

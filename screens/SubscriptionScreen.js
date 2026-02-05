@@ -1,20 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, Platform, Linking } from 'react-native';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { fetchCatalogFromSupabase } from '../services/supabaseContent';
 import { getOfferings, purchasePackage, getCustomerInfo } from '../services/revenuecat';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 // Map series IDs to RevenueCat Entitlement Identifiers
-// Adjust these if your RevenueCat configuration differs
-const SERIES_ENTITLEMENTS = {
-  '1': 'series_1',
-  '2': 'series_2',
-  '3': 'series_3',
-  '4': 'series_4',
+// Removed hardcoded map to allow dynamic matching (series_1 or series_a)
+
+// Helper to check access based on active entitlements dictionary
+const checkAccess = (activeEntitlements, seriesId) => {
+  const map = { '1': 'a', '2': 'b', '3': 'c', '4': 'd' };
+  const letter = map[seriesId];
+  
+  return Object.keys(activeEntitlements).some(key => {
+    const lowerKey = key.toLowerCase();
+    return lowerKey.includes(`series_${seriesId}`) || (letter && lowerKey.includes(`series_${letter}`));
+  });
 };
+
+const getSeriesLetter = (id) => {
+  const map = { '1': 'a', '2': 'b', '3': 'c', '4': 'd' };
+  return map[id] || id;
+}
 
 const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [loading, setLoading] = useState(true);
@@ -24,10 +35,26 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
   const [processingParams, setProcessingParams] = useState(null); // { seriesId: string }
   
   const { t, isRTL } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    loadData();
-  }, [t]); // Reload data if language changes to ensuring titles update if we relied on state (but here we map dynamically in render)
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [t, isAuthenticated]); 
+
+  if (!isAuthenticated) {
+    return (
+      <Layout onMenuPress={onMenuPress} isMenuVisible={isMenuVisible} onCloseMenu={onCloseMenu} onNavigate={onNavigate} currentScreen={currentScreen} onBack={onBack} showBack={showBack}>
+        <View style={styles.centerContainer}>
+          <Text style={styles.authMessage}>{t('loginToSubscribe') || 'Please log in to view subscriptions.'}</Text>
+          <TouchableOpacity style={styles.loginButton} onPress={() => onNavigate('account')}>
+            <Text style={styles.loginButtonText}>{t('login') || 'Log In'}</Text>
+          </TouchableOpacity>
+        </View>
+      </Layout>
+    );
+  } 
 
   const loadData = async () => {
     try {
@@ -35,10 +62,9 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
       
       // 1. Fetch Content from Supabase
       const catalog = await fetchCatalogFromSupabase();
-      const books = catalog.books || [];
+      const books = catalog || []; 
 
       // Group books by series
-      // Use t() for localized titles
       const grouped = {
         '1': { title: `${t('series1')}: ${t('series1Subtitle')}`, books: [] },
         '2': { title: `${t('series2')}: ${t('series2Subtitle')}`, books: [] },
@@ -65,25 +91,12 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
 
     } catch (error) {
       console.error('Error loading subscription data:', error);
-      Alert.alert('Error', 'Failed to load subscription data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubscribe = async (seriesId) => {
-    const entitlementId = SERIES_ENTITLEMENTS[seriesId];
-    if (!entitlementId) return;
-
-    // specific package for this series
-    // Assumption: Package identifier contains series ID (e.g., "series_1_monthly")
-    // Or you can map seriesId to specific package identifiers if they are strict.
-    // For now, we will try to find a package that matches the entitlement.
-    // Since RevenueCat offerings map packages -> products -> entitlements, we need to pick the right package.
-    // Simple heuristic: Look provided package identifier or product identifier containing 'series_X'
-    
-    const pkg = offerings.find(p => p.product.identifier.includes(`series_${seriesId}`));
-    
+  const handleSubscribe = async (seriesId, pkg) => {
     if (!pkg) {
       Alert.alert(t('unavailable'), 'Subscription for this series is currently unavailable.');
       return;
@@ -105,64 +118,58 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
     }
   };
 
+  const openLink = (url) => {
+    Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+  };
+
   const renderSeriesCard = (seriesId) => {
     const data = seriesData[seriesId];
     if (!data) return null;
 
-    const entitlementId = SERIES_ENTITLEMENTS[seriesId];
-    const isSubscribed = activeEntitlements[entitlementId] !== undefined;
+    const isSubscribed = checkAccess(activeEntitlements, seriesId);
+    const seriesLetter = getSeriesLetter(seriesId);
     
-    // Find price
-    const pkg = offerings.find(p => p.product.identifier.includes(`series_${seriesId}`));
-    const priceString = pkg ? pkg.product.priceString : 'N/A';
+    // Improved matching logic: 
+    // Match 'series_1' OR 'series_a' to support both naming conventions
+    const pkg = offerings.find(p => 
+      p.product.identifier.toLowerCase().includes(`series_${seriesId}`) || 
+      p.product.identifier.toLowerCase().includes(`series_${seriesLetter}`)
+    );
     
+    const priceString = pkg ? pkg.product.priceString : '';
+    const productTitle = pkg ? pkg.product.title : data.title;
+    const productDesc = pkg ? pkg.product.description : t('subscriptionsSubtitle');
+    const isAutoRenewing = pkg && pkg.product.subscriptionPeriod ? true : false; // Naive check
+
     return (
       <View key={seriesId} style={styles.card}>
-        <View style={[styles.cardHeader, isRTL ? styles.rowReverse : styles.row]}>
-            <Text style={[styles.seriesTitle, isRTL ? styles.textRight : styles.textLeft]}>
-            {data.title}
-          </Text>
-          {isSubscribed && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{t('subscribedBadge')}</Text>
-            </View>
-          )}
-        </View>
+        <View style={styles.cardContent}>
+            <Text style={styles.seriesTitle}>{productTitle}</Text>
+            {isAutoRenewing && <Text style={styles.autoRenewText}>(Auto-renewing)</Text>}
+            
+            <Text style={styles.description}>{productDesc}</Text>
+            
+            {/* Books Preview Removed as per user request */}
 
-        {/* Books Preview */}
-        <ScrollView horizontal style={styles.booksScroll} showsHorizontalScrollIndicator={false} contentContainerStyle={isRTL ? styles.rtlScroll : null}>
-          {data.books.map((book, index) => (
-            <View key={index} style={styles.bookPreview}>
-              <Image 
-                source={book.coverUrl ? { uri: book.coverUrl } : require('../assets/book1.jpg')} 
-                style={styles.bookCover}
-                resizeMode="cover"
-              />
-              <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
+            <View style={styles.priceContainer}>
+               <Text style={styles.priceText}>{pkg ? priceString : t('unavailable')}</Text>
             </View>
-          ))}
-        </ScrollView>
 
-        <View style={styles.cardFooter}>
-           {isSubscribed ? (
-             <TouchableOpacity style={[styles.button, styles.subscribedButton]} disabled>
-               <Text style={styles.buttonText}>{t('subscribedButton')}</Text>
-             </TouchableOpacity>
-           ) : (
              <TouchableOpacity 
-               style={styles.button}
-               onPress={() => handleSubscribe(seriesId)}
-               disabled={!pkg || processingParams?.seriesId === seriesId}
+               style={[styles.button, isSubscribed ? styles.subscribedButton : null]}
+               onPress={() => !isSubscribed && handleSubscribe(seriesId, pkg)}
+               disabled={isSubscribed || !pkg || processingParams?.seriesId === seriesId}
              >
                {processingParams?.seriesId === seriesId ? (
                  <ActivityIndicator color="#fff" />
                ) : (
                  <Text style={styles.buttonText}>
-                   {t('subscribeNow')} {pkg ? `(${priceString})` : `(${t('unavailable')})`}
+                   {isSubscribed ? t('subscribedButton') : t('subscribe')}
                  </Text>
                )}
              </TouchableOpacity>
-           )}
+
+             {/* Legal links moved to footer */}
         </View>
       </View>
     );
@@ -184,7 +191,6 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
           <Text style={styles.subTitle}>{t('subscriptionsSubtitle')}</Text>
         </View>
         
-
         {loading ? (
           <View style={styles.loaderContainer}>
             <ActivityIndicator size="large" color={Colors.header} />
@@ -192,32 +198,43 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
           </View>
         ) : (
           <View style={styles.cardsContainer}>
-            {offerings.length > 0 ? (
-                offerings
-                .map(pkg => {
-                    // unexpected identifier format handling
-                    // Expected format: series_1_monthly, series_1, etc.
-                    // We extract the first number found or look for "series_X"
-                    const match = pkg.product.identifier.match(/series_(\d+)/i);
-                    const seriesId = match ? match[1] : null;
+             {['1', '2', '3', '4'].filter(id => {
+                // Check if available in RevenueCat
+                const letter = getSeriesLetter(id);
+                const hasPackage = offerings.some(p => 
+                  p.product.identifier.toLowerCase().includes(`series_${id}`) || 
+                  p.product.identifier.toLowerCase().includes(`series_${letter}`)
+                );
+                // Check if already subscribed
+                const isSubscribed = checkAccess(activeEntitlements, id);
+                
+                // Only show if available to buy OR already subscribed
+                return hasPackage || isSubscribed;
+             }).map(id => renderSeriesCard(id))}
+             
+             {/* If everything is filtered out, show a fallback */}
+             {offerings.length === 0 && Object.keys(activeEntitlements).length === 0 && (
+                <Text style={styles.noDataText}>{t('noBooks')}</Text>
+             )}
+          </View>
+        )}
 
-                    // If we can't map it to a series we have content for, skip it
-                    if (!seriesId || !seriesData[seriesId]) return null;
+             {offerings.length === 0 && Object.keys(activeEntitlements).length === 0 && (
+                <Text style={styles.noDataText}>{t('noBooks')}</Text>
+             )}
+          </View>
+        )}
 
-                    return { pkg, seriesId };
-                })
-                .filter(Boolean) // remove nulls
-                .sort((a, b) => parseInt(a.seriesId) - parseInt(b.seriesId)) // Sort by series ID
-                .map(({ seriesId }) => renderSeriesCard(seriesId))
-            ) : (
-                 <Text style={{textAlign: 'center', marginTop: 20, color: Colors.text}}>
-                    {t('unavailable')}
-                 </Text>
-            )}
-            
-            {/* Fallback/Dev check: If no packages found, maybe show hardcoded for now? 
-                User requested "not hardcoded ones", so we stick to strictly what RC returns. */
-            }
+        {/* Legal Links (iOS Only) */}
+        {Platform.OS === 'ios' && (
+          <View style={styles.legalLinksContainer}>
+            <TouchableOpacity onPress={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+              <Text style={styles.legalLink}>Terms of Use (EULA)</Text>
+            </TouchableOpacity>
+            <Text style={styles.linkSep}> | </Text>
+            <TouchableOpacity onPress={() => openLink('https://almakary.com/privacy-policy')}> 
+              <Text style={styles.legalLink}>{t('privacyPolicy')}</Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -231,6 +248,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingTop: 20,
+    backgroundColor: '#f8f9fa',
   },
   headerContainer: {
     paddingHorizontal: 20,
@@ -258,96 +276,142 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   cardsContainer: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     paddingBottom: 20,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 20,
-    padding: 16,
+    borderRadius: 16,
+    marginBottom: 24,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 8,
+    elevation: 4,
+    overflow: 'hidden',
   },
-  cardHeader: {
-    alignItems: 'center',
-    marginBottom: 16,
-    justifyContent: 'space-between',
-  },
-  row: {
-      flexDirection: 'row',
-  },
-  rowReverse: {
-      flexDirection: 'row-reverse',
+  cardContent: {
+    padding: 20,
   },
   seriesTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     color: Colors.header,
-    flex: 1,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  textRight: {
-      textAlign: 'right',
-  },
-  textLeft: {
-      textAlign: 'left',
-  },
-  badge: {
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    marginHorizontal: 8,
-  },
-  badgeText: {
-    color: '#fff',
+  autoRenewText: {
     fontSize: 12,
-    fontWeight: 'bold',
+    color: '#888',
+    textAlign: 'center',
+    marginBottom: 12,
+    fontStyle: 'italic',
+  },
+  description: {
+    fontSize: 14,
+    color: '#555',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 20,
   },
   booksScroll: {
-    marginBottom: 16,
+    marginBottom: 20,
+    paddingVertical: 10,
   },
   rtlScroll: {
       flexDirection: 'row-reverse',
   },
   bookPreview: {
-    width: 100,
-    marginRight: 10,
+    width: 90,
+    marginRight: 12,
     alignItems: 'center',
   },
   bookCover: {
-    width: 80,
-    height: 120,
-    borderRadius: 6,
-    marginBottom: 4,
-    backgroundColor: '#eee',
+    width: 70,
+    height: 105,
+    borderRadius: 4,
+    marginBottom: 6,
+    backgroundColor: '#f0f0f0',
   },
   bookTitle: {
     fontSize: 10,
     textAlign: 'center',
-    color: Colors.text,
+    color: '#666',
   },
-  cardFooter: {
+  priceContainer: {
     alignItems: 'center',
+    marginBottom: 15,
+  },
+  priceText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.activeText,
   },
   button: {
     backgroundColor: Colors.header,
-    paddingVertical: 12,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 30,
     alignItems: 'center',
+    width: '100%',
+    shadowColor: Colors.header,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   subscribedButton: {
-    backgroundColor: '#ccc',
+    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
   },
   buttonText: {
     color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  legalLinksContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  legalLink: {
+    color: '#007AFF', // Standard iOS blue link color
+    fontSize: 12,
+    textDecorationLine: 'underline',
+  },
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  authMessage: {
+    fontSize: 18,
+    color: Colors.text,
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  loginButton: {
+    backgroundColor: Colors.header,
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  loginButtonText: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  linkSep: {
+    fontSize: 12,
+    color: '#ccc',
+    marginHorizontal: 8,
+  },
+  noDataText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#666',
+    marginTop: 20,
   },
 });
 

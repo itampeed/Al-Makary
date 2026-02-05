@@ -6,12 +6,16 @@ import Footer from '../../components/Footer';
 import Colors from '../../constants/Colors';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { fetchCatalogFromSupabase } from '../../services/supabaseContent';
-import { hasActiveEntitlement } from '../../services/revenuecat';
+import { hasSeriesAccess } from '../../services/revenuecat';
+
+import BookDetailModal from '../../components/BookDetailModal';
 
 const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [hasAccess, setHasAccess] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [books, setBooks] = React.useState([]);
+  const [selectedBook, setSelectedBook] = React.useState(null);
+  const [modalVisible, setModalVisible] = React.useState(false);
   const { t, isRTL } = useLanguage();
 
   React.useEffect(() => {
@@ -21,7 +25,7 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
   const loadData = async () => {
     try {
       const [access, catalog] = await Promise.all([
-        hasActiveEntitlement('series_2'),
+        hasSeriesAccess('2'),
         fetchCatalogFromSupabase()
       ]);
       
@@ -35,19 +39,21 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
   };
 
   const handleBookPress = (book) => {
-    if (!hasAccess) {
-      Alert.alert(
-        t('subscriptionRequired'),
-        t('subscriptionRequiredMsg'),
-        [
-          { text: t('cancel'), style: "cancel" },
-          { text: t('subscribe'), onPress: () => onNavigate('subscription') }
-        ]
-      );
-    } else {
-      const route = `reader:${encodeURIComponent(book.pdfUrl)}`;
+    setSelectedBook(book);
+    setModalVisible(true);
+  };
+
+  const handleReadPress = () => {
+    setModalVisible(false);
+    if (selectedBook) {
+      const route = `reader:${encodeURIComponent(selectedBook.pdfUrl)}`;
       onNavigate(route);
     }
+  };
+
+  const handleSubscribePress = () => {
+     setModalVisible(false);
+     onNavigate('subscription');
   };
 
   if (loading) {
@@ -91,10 +97,18 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
               <Image 
                 source={book.coverUrl ? { uri: book.coverUrl } : require('../../assets/icon.png')} 
                 style={styles.bookCover} 
-                resizeMode="cover" 
+                resizeMode="contain" 
               />
-              <Text style={styles.bookTitle}>{book.title}</Text>
-              {book.description && <Text style={styles.bookDescription} numberOfLines={2}>{book.description}</Text>}
+              <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
+              {book.author && <Text style={styles.bookAuthor} numberOfLines={1}>{book.author}</Text>}
+              
+              <View style={styles.metaContainer}>
+                {book.pages && <Text style={styles.bookMeta}>{book.pages} {t('pages') || 'Pages'}</Text>}
+                {book.pages && book.language && <Text style={styles.bookMetaSep}>•</Text>}
+                {book.language && <Text style={styles.bookMeta}>{book.language}</Text>}
+              </View>
+
+              {/* {book.description && <Text style={styles.bookDescription} numberOfLines={2}>{book.description}</Text>} */}
             </TouchableOpacity>
           ))}
           {books.length === 0 && (
@@ -104,6 +118,15 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
 
         <Footer />
       </ScrollView>
+
+      <BookDetailModal 
+        visible={modalVisible}
+        book={selectedBook}
+        onClose={() => setModalVisible(false)}
+        onRead={handleReadPress}
+        onSubscribe={handleSubscribePress}
+        hasAccess={hasAccess}
+      />
     </Layout>
   );
 };
@@ -166,13 +189,21 @@ const styles = StyleSheet.create({
     width: '48%',
     marginBottom: 20,
     alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
   },
   bookCover: {
     width: '100%',
-    height: 200,
-    borderRadius: 8,
+    height: 200, 
+    borderRadius: 4,
     marginBottom: 8,
-    backgroundColor: '#eee',
+    backgroundColor: '#f0f0f0',
   },
   bookTitle: {
     fontWeight: 'bold',
@@ -180,6 +211,28 @@ const styles = StyleSheet.create({
     color: Colors.header,
     textAlign: 'center',
     marginBottom: 4,
+  },
+  bookAuthor: {
+    fontSize: 12,
+    color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 4,
+    opacity: 0.8,
+  },
+  metaContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  bookMeta: {
+    fontSize: 11,
+    color: '#666',
+  },
+  bookMetaSep: {
+    fontSize: 11,
+    color: '#666',
+    marginHorizontal: 4,
   },
   bookDescription: {
     fontSize: 12,

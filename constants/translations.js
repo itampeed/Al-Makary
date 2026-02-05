@@ -6,7 +6,7 @@ export const translations = {
     subscription: 'الاشتراكات',
     lectures: 'المحاضرات',
     library: 'المكتبة',
-    returnPolicy: 'سياسة الاسترجاع',
+
     privacyPolicy: 'سياسة الخصوصية',
     contact: 'اتصل بنا',
     myAccount: 'حسابي',
@@ -18,6 +18,9 @@ export const translations = {
     error: 'حدث خطأ',
     success: 'نجاح',
     subscribe: 'اشترك الآن',
+    subscribeToRead: 'اشترك للقراءة',
+    readBook: 'قراءة الكتاب',
+    aboutBook: 'عن هذا الكتاب',
     subscribeShort: 'اشترك',
     subscribed: 'مشترك',
     lockedContent: 'هذا المحتوى متاح للمشتركين فقط.',
@@ -55,22 +58,7 @@ export const translations = {
     contactAddress: 'للكتب يُطلب من\n مكتبة مجلَّة مرقس القاهرة:\n 28 شارع شبرا - القاهرة',
     contactPerson: '25770614 والمكتبات \n المسيحيَّة والكنسيَّة كما \n يُطلب من الأستاذ المحاسب \n مينا سمير أنطون',
     
-    // Return Policy
-    returnPolicyTitle: 'سياسة الاسترجاع والاستبدال',
-    salesPolicyHeading: 'سياسة البيع',
-    salesPolicySub1: '1. شراء الكتب:',
-    salesPolicyText1: 'يمكن شراء الكتب من خلال الموقع الإلكتروني عبر الخطوات البسيطة المتاحة. بعد إضافة الكتب إلى السلة، يمكنك مراجعة الطلب وإكمال عملية الدفع.',
-    salesPolicySub2: '2. طرق الدفع:',
-    salesPolicyText2: 'نقبل الدفع عبر بطاقات الائتمان (فيزا، ماستر كارد). الدفع عبر التحويل البنكي متاح أيضًا، ولكن يتم تأكيد الطلب بعد استلام الدفعة.',
-    salesPolicySub3: '3. التوصيل والشحن:',
-    salesPolicyText3: 'نقوم بشحن الطلبات محليًا ودوليًا. تختلف مدة التوصيل حسب الموقع الجغرافي، ويتم تزويدك بتفاصيل الشحن وتقدير مدة التوصيل عند إتمام الطلب. رسوم الشحن تحتسب بناءً على الوجهة ووزن الكتب.',
-    returnPolicyHeading: 'سياسة الاسترداد',
-    returnPolicySub1: '1. الإرجاع والاستبدال:',
-    returnPolicyText1: 'يمكنك إرجاع الكتب أو استبدالها خلال 14 يومًا من استلام الطلب. يجب أن تكون الكتب بحالة جديدة وغير مستخدمة، مع الحفاظ على التغليف الأصلي.',
-    returnPolicySub2: '2. عملية الاسترداد:',
-    returnPolicyText2: 'للتقدم بطلب إرجاع أو استبدال، يرجى الاتصال بخدمة العملاء عبر البريد الإلكتروني أو الهاتف. سيُطلب منك تزويدنا بتفاصيل الطلب وصورة من الفاتورة.',
-    returnPolicySub3: '3. استرداد الأموال:',
-    returnPolicyText3: 'بعد استلام الكتب المرتجعة والتحقق من حالتها، سنقوم بمعالجة استرداد الأموال إلى طريقة الدفع الأصلية. قد يستغرق الاسترداد من 5 إلى 10 أيام عمل للوصول إلى حسابك.',
+
     contactUsHeading: 'الاتصال بنا',
     contactUsText: 'إذا كان لديك أي استفسارات أو تحتاج إلى مساعدة إضافية، يرجى التواصل معنا عبر:',
 
@@ -81,7 +69,7 @@ export const translations = {
     privacyHeading2: '2. جمع المعلومات الشخصية',
     privacyText2: 'نقوم بجمع المعلومات الشخصية التي تقدمها لنا عند التسجيل على الموقع، مثل اسمك، بريدك الإلكتروني، وعنوانك. يمكننا أيضًا جمع معلومات عن استخدامك للموقع مثل الصفحات التي تزورها.',
     privacyHeading3: '3. استخدام المعلومات الشخصية',
-    privacyText3: 'نستخدم المعلومات التي نجمعها للأغراض التالية:\n• توفير وتحسين خدماتنا.\n• معالجة الطلبات والمعاملات.\n• إرسال إشعارات بالبريد الإلكتروني حول المنتجات والعروض الخاصة.\n• تحليل استخدام الموقع لتحسين الأداء.',
+    privacyText3: 'نستخدم المعلومات التي نجمعها للأغراض التالية:\n• توفير وتحسين خدماتنا.\n• إرسال إشعارات بالبريد الإلكتروني حول المنتجات والعروض الخاصة.\n• تحليل استخدام الموقع لتحسين الأداء.',
     privacyHeading4: '4. حماية المعلومات الشخصية',
     privacyText4: 'نتخذ إجراءات أمنية معقولة لحماية معلوماتك الشخصية من الوصول غير المصرح به أو التغيير أو الكشف أو التدمير.',
     privacyHeading5: '5. مشاركة المعلومات الشخصية',
@@ -108,12 +96,12 @@ export const translations = {
     welcome: 'مرحباً بك!',
     loggedInSuccess: 'تم تسجيل الدخول بنجاح',
     whatYouCanDo: 'ما يمكنك فعله:',
-    shopNow: 'تسوق الآن',
+
     signOut: 'تسجيل الخروج',
-    featureBrowse: 'تصفح وشراء الكتب الروحية',
-    featureListen: 'الاستماع للمحاضرات والتأملات',
+    featureBrowse: 'تصفح الكتب الروحية',
     featureRead: 'قراءة الكتب والمقالات',
-    featureBuy: 'إتمام عمليات الشراء بسهولة',
+
+
     resetPassword: 'إعادة تعيين كلمة المرور',
     enterEmail: 'أدخل بريدك الإلكتروني لإرسال رابط إعادة التعيين.',
     sendEmail: 'إرسال',
@@ -130,6 +118,7 @@ export const translations = {
     subscribeNow: 'اشترك الآن',
     unavailable: 'غير متاح',
     loadingData: 'جاري تحميل البيانات...',
+    loginToSubscribe: 'يجب تسجيل الدخول لعرض الاشتراكات',
 
     // Library Screen
     libraryMainTitle: 'الدُّرَّة الطَّقسيَّة للكنيسة القبطيَّة بين الكنائس الشَّرقيَّة',
@@ -160,7 +149,7 @@ export const translations = {
     subscription: 'Subscriptions',
     lectures: 'Lectures',
     library: 'Library',
-    returnPolicy: 'Return Policy',
+
     privacyPolicy: 'Privacy Policy',
     contact: 'Contact Us',
     myAccount: 'My Account',
@@ -172,6 +161,9 @@ export const translations = {
     error: 'Error',
     success: 'Success',
     subscribe: 'Subscribe Now',
+    subscribeToRead: 'Subscribe To Read',
+    readBook: 'Read Book',
+    aboutBook: 'About This Book',
     subscribeShort: 'Subscribe',
     subscribed: 'Subscribed',
     lockedContent: 'This content is available for subscribers only.',
@@ -209,22 +201,7 @@ export const translations = {
     contactAddress: 'For books, please request from:\nMarkos Magazine Library Cairo:\n28 Shoubra St. - Cairo',
     contactPerson: '25770614 and Christian & Church Libraries\nAlso requested from Accountant\nMina Samir Anton',
     
-    // Return Policy
-    returnPolicyTitle: 'Return and Exchange Policy',
-    salesPolicyHeading: 'Sales Policy',
-    salesPolicySub1: '1. Purchasing Books:',
-    salesPolicyText1: 'Books can be purchased through the website via simple available steps. After adding books to the cart, you can review the order and complete the payment process.',
-    salesPolicySub2: '2. Payment Methods:',
-    salesPolicyText2: 'We accept payment via credit cards (Visa, MasterCard). Payment via bank transfer is also available, but the order is confirmed after receipt of payment.',
-    salesPolicySub3: '3. Delivery and Shipping:',
-    salesPolicyText3: 'We ship orders locally and internationally. Delivery time varies by geographic location, and you will be provided with shipping details and estimated delivery time upon completing the order. Shipping fees are calculated based on destination and book weight.',
-    returnPolicyHeading: 'Refund Policy',
-    returnPolicySub1: '1. Returns and Exchanges:',
-    returnPolicyText1: 'You can return or exchange books within 14 days of receiving order. Books must be in new and unused condition, maintaining original packaging.',
-    returnPolicySub2: '2. Refund Process:',
-    returnPolicyText2: 'To request a return or exchange, please contact customer service via email or phone. You will be asked to provide order details and a copy of the invoice.',
-    returnPolicySub3: '3. Refunds:',
-    returnPolicyText3: 'After receiving the returned books and verifying their condition, we will process the refund to the original payment method. The refund may take 5 to 10 business days to reach your account.',
+
     contactUsHeading: 'Contact Us',
     contactUsText: 'If you have any inquiries or need additional assistance, please contact us via:',
 
@@ -235,7 +212,7 @@ export const translations = {
     privacyHeading2: '2. Collection of Personal Information',
     privacyText2: 'We collect personal information you provide when registering on the site, such as your name, email, and address. We may also collect information about your use of the site such as pages you visit.',
     privacyHeading3: '3. Use of Personal Information',
-    privacyText3: 'We use the information we collect for the following purposes:\n• Providing and improving our services.\n• Processing orders and transactions.\n• Sending email notifications about products and special offers.\n• Analyzing site usage to improve performance.',
+    privacyText3: 'We use the information we collect for the following purposes:\n• Providing and improving our services.\n• Sending email notifications about products and special offers.\n• Analyzing site usage to improve performance.',
     privacyHeading4: '4. Protection of Personal Information',
     privacyText4: 'We take reasonable security measures to protect your personal information from unauthorized access, alteration, disclosure, or destruction.',
     privacyHeading5: '5. Sharing Personal Information',
@@ -262,12 +239,12 @@ export const translations = {
     welcome: 'Welcome!',
     loggedInSuccess: 'Logged in successfully',
     whatYouCanDo: 'What you can do:',
-    shopNow: 'Shop Now',
+
     signOut: 'Sign Out',
-    featureBrowse: 'Browse and buy spiritual books',
-    featureListen: 'Listen to lectures and contemplations',
+    featureBrowse: 'Browse spiritual books',
+
     featureRead: 'Read books and articles',
-    featureBuy: 'Complete purchases easily',
+
     resetPassword: 'Reset Password',
     enterEmail: 'Enter your email to send a reset link.',
     sendEmail: 'Send',
@@ -285,6 +262,7 @@ export const translations = {
     subscribeNow: 'Subscribe Now',
     unavailable: 'Unavailable',
     loadingData: 'Loading data...',
+    loginToSubscribe: 'Please log in to view subscriptions',
 
     // Library Screen
     libraryMainTitle: 'The Liturgical Gem of the Coptic Church Among Eastern Churches',

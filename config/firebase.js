@@ -18,13 +18,13 @@ import {
 
 // Your Firebase project configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBCsnjANlU-ZU4SdKR1Uy15gIrGHqvVx2E",
-  authDomain: "almakary-12b81.firebaseapp.com",
-  projectId: "almakary-12b81",
-  storageBucket: "almakary-12b81.firebasestorage.app",
-  messagingSenderId: "33622921489",
-  appId: "1:33622921489:web:05af41db93bd73af1a3cb0",
-  measurementId: "G-789QGEWGWK"
+  apiKey: "AIzaSyAIABafwfyKn5BWMZ4hmsmM_9kPAwX4_xY",
+  authDomain: "almakary-e3125.firebaseapp.com",
+  projectId: "almakary-e3125",
+  storageBucket: "almakary-e3125.firebasestorage.app",
+  messagingSenderId: "931311548909",
+  appId: "1:931311548909:web:4ed384f7d98bf0fbafcfe4",
+  measurementId: "G-VPB4HJ518G"
 };
 
 // Initialize Firebase (avoid re-init in Fast Refresh)

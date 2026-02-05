@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
@@ -22,6 +23,7 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   
   const { t, language, setLanguage, isRTL } = useLanguage();
+  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     if (isVisible) {
@@ -62,6 +64,11 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
   };
 
   const handleMenuPress = (itemKey) => {
+    if (itemKey === 'logout') {
+      logout();
+      onClose();
+      return;
+    }
     onNavigate(itemKey);
     onClose();
   };
@@ -101,11 +108,20 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
     //   ]
     // },
     { key: 'subscription', text: t('subscription'), icon: 'card-outline' },
-    { key: 'return-policy', text: t('returnPolicy'), icon: 'refresh-outline' },
+
     { key: 'privacy-policy', text: t('privacyPolicy'), icon: 'shield-checkmark-outline' },
     { key: 'contact', text: t('contact'), icon: 'mail-outline' },
+
     { key: 'account', text: t('myAccount'), icon: 'person-circle-outline' },
   ];
+
+  if (isAuthenticated) {
+    menuItems.push({ 
+      key: 'logout', 
+      text: t('signOut') || 'Sign Out', // Fallback if translation missing
+      icon: 'log-out-outline' 
+    });
+  }
 
   const renderMenuItem = (item) => {
     const isExpanded = expandedItems[item.key];
@@ -115,18 +131,6 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
       <View key={item.key}>
         {item.hasDropdown ? (
           <View style={[styles.menuItem, isRTL ? styles.rowReverse : styles.row]}>
-            <TouchableOpacity 
-              onPress={() => toggleExpanded(item.key)} 
-              style={styles.iconTouchable}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Ionicons 
-                name={isExpanded ? "remove" : "add"} 
-                size={20} 
-                color="#666" 
-              />
-            </TouchableOpacity>
-            
             <TouchableOpacity 
               style={[styles.menuTextWrapper, isRTL ? styles.alignRight : styles.alignLeft]}
               onPress={() => handleMenuPress(item.key)}
@@ -141,6 +145,17 @@ const SideMenu = ({ isVisible, onClose, onNavigate, currentScreen }) => {
                     {item.text}
                   </Text>
                </View>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              onPress={() => toggleExpanded(item.key)} 
+              style={styles.iconTouchable}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons 
+                name={isExpanded ? "remove" : "add"} 
+                size={20} 
+                color="#666" 
+              />
             </TouchableOpacity>
           </View>
         ) : (
@@ -355,8 +370,6 @@ const styles = StyleSheet.create({
   languageSection: {
       marginTop: 20,
       paddingTop: 20,
-      borderTopWidth: 1,
-      borderTopColor: Colors.accent,
       alignItems: 'center',
   },
   languageButtons: {

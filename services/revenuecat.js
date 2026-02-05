@@ -168,6 +168,34 @@ export const hasActiveEntitlement = async (entitlementId) => {
 };
 
 /**
+ * Check if user has access to a specific series dynamically
+ * @param {string} seriesId - The series number ('1', '2', '3', '4')
+ */
+export const hasSeriesAccess = async (seriesId) => {
+
+
+  try {
+    const { customerInfo } = await Purchases.getCustomerInfo();
+    const active = customerInfo.entitlements.active;
+    
+    // Map numerical series ID to letter (1->a, 2->b, etc.)
+    const letterMap = { '1': 'a', '2': 'b', '3': 'c', '4': 'd' };
+    const letter = letterMap[seriesId];
+
+    // Check for any entitlement that contains "series_ID" or "series_LETTER"
+    // e.g. for series 1: matches "series_1", "series_a_access", "series_1_legacy"
+    return Object.keys(active).some(key => {
+      const lowerKey = key.toLowerCase();
+      return lowerKey.includes(`series_${seriesId}`) || (letter && lowerKey.includes(`series_${letter}`));
+    });
+
+  } catch (error) {
+    console.error(`Error checking access for series ${seriesId}:`, error);
+    return false;
+  }
+};
+
+/**
  * Log in to RevenueCat with a specific user ID
  * @param {string} userId - The Firebase User ID
  */
