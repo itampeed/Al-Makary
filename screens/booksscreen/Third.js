@@ -6,12 +6,7 @@ import Colors from '../../constants/Colors';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { fetchCatalogFromSupabase } from '../../services/supabaseContent';
 import { hasSeriesAccess } from '../../services/revenuecat';
-import { useFocusEffect } from '@react-navigation/native';
-
-import BookDetailModal from '../../components/BookDetailModal';
-
 import { useAuth } from '../../contexts/AuthContext';
-
 const ThirdBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [hasAccess, setHasAccess] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
@@ -21,13 +16,10 @@ const ThirdBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
 
-
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('ThirdBookScreen focused, reloading data...');
-      loadData();
-    }, [user])
-  );
+  useEffect(() => {
+    console.log('ThirdBookScreen mounted or user changed, reloading data...');
+    loadData();
+  }, [user]);
 
   const loadData = async () => {
     try {

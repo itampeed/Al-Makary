@@ -8,8 +8,6 @@ import { fetchCatalogFromSupabase } from '../../services/supabaseContent';
 import { hasSeriesAccess } from '../../services/revenuecat';
 
 import BookDetailModal from '../../components/BookDetailModal';
-import { useFocusEffect } from '@react-navigation/native';
-
 import { useAuth } from '../../contexts/AuthContext';
 
 const FirstBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
@@ -21,13 +19,11 @@ const FirstBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
 
-  // Use focus effect to refresh status when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      console.log('FirstBookScreen focused, reloading data...');
-      loadData();
-    }, [user])
-  );
+  // Use useEffect to refresh status when screen mounts or user changes
+  React.useEffect(() => {
+    console.log('FirstBookScreen mounted, reloading data...');
+    loadData();
+  }, [user]);
 
   const loadData = async () => {
     try {
