@@ -178,16 +178,30 @@ export const hasSeriesAccess = async (seriesId) => {
     const { customerInfo } = await Purchases.getCustomerInfo();
     const active = customerInfo.entitlements.active;
     
+    console.log(`[hasSeriesAccess] Checking access for Series ${seriesId}`);
+    console.log(`[hasSeriesAccess] Active entitlements:`, Object.keys(active));
+
     // Map numerical series ID to letter (1->a, 2->b, etc.)
     const letterMap = { '1': 'a', '2': 'b', '3': 'c', '4': 'd' };
     const letter = letterMap[seriesId];
 
     // Check for any entitlement that contains "series_ID" or "series_LETTER"
-    // e.g. for series 1: matches "series_1", "series_a_access", "series_1_legacy"
-    return Object.keys(active).some(key => {
+    const hasAccess = Object.keys(active).some(key => {
       const lowerKey = key.toLowerCase();
-      return lowerKey.includes(`series_${seriesId}`) || (letter && lowerKey.includes(`series_${letter}`));
+      // Precise check then fuzzy check
+      // We check if the key *contains* the series identifier to handle "series_1_monthly", "pro_series_a", etc.
+      const matchNumeric = lowerKey.includes(`series_${seriesId}`);
+      const matchLetter = letter && lowerKey.includes(`series_${letter}`);
+      
+      if (matchNumeric || matchLetter) {
+        console.log(`[hasSeriesAccess] Match found: ${key} for Series ${seriesId}`);
+        return true;
+      }
+      return false;
     });
+
+    console.log(`[hasSeriesAccess] Result for Series ${seriesId}: ${hasAccess}`);
+    return hasAccess;
 
   } catch (error) {
     console.error(`Error checking access for series ${seriesId}:`, error);

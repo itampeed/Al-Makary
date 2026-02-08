@@ -9,6 +9,9 @@ import { fetchCatalogFromSupabase } from '../../services/supabaseContent';
 import { hasSeriesAccess } from '../../services/revenuecat';
 
 import BookDetailModal from '../../components/BookDetailModal';
+import { useFocusEffect } from '@react-navigation/native';
+
+import { useAuth } from '../../contexts/AuthContext';
 
 const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [hasAccess, setHasAccess] = React.useState(false);
@@ -17,10 +20,15 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
   const [selectedBook, setSelectedBook] = React.useState(null);
   const [modalVisible, setModalVisible] = React.useState(false);
   const { t, isRTL } = useLanguage();
+  const { user } = useAuth();
 
-  React.useEffect(() => {
-    loadData();
-  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('SecondBookScreen focused, reloading data...');
+      loadData();
+    }, [user])
+  );
 
   const loadData = async () => {
     try {
