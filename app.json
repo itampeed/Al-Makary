@@ -2,7 +2,7 @@
   "expo": {
     "name": "Ritual Gem of Fr. Athanasius al-Makary",
     "slug": "ritual-gem-of-almakary",
-    "version": "1.1.9",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -28,7 +28,7 @@
       },
       "edgeToEdgeEnabled": true,
       "package": "com.ritualgem.naybiltech",
-      "versionCode": 8
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -57,27 +57,35 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
   } 
 
   const loadData = async () => {
-    try {
-      setLoading(true);
-      
-      // 1. Fetch Content from Supabase
-      const catalog = await fetchCatalogFromSupabase();
-      const books = catalog || []; 
-
-      // Group books by series
-      const grouped = {
+    setLoading(true);
+    
+    // Default series data with titles from translation
+    const grouped = {
         '1': { title: `${t('series1')}: ${t('series1Subtitle')}`, books: [] },
         '2': { title: `${t('series2')}: ${t('series2Subtitle')}`, books: [] },
         '3': { title: `${t('series3')}: ${t('series3Subtitle')}`, books: [] },
         '4': { title: `${t('series4')}: ${t('series4Subtitle')}`, books: [] },
-      };
+    };
+    
+    // Set initial data so cards appear
+    setSeriesData(grouped);
 
-      books.forEach(book => {
-        if (book.series && grouped[book.series]) {
-          grouped[book.series].books.push(book);
-        }
-      });
-      setSeriesData(grouped);
+    try {
+      // 1. Fetch Content from Supabase (Non-blocking for UI)
+      try {
+          const catalog = await fetchCatalogFromSupabase();
+          const books = catalog || [];
+          
+          books.forEach(book => {
+            if (book.series && grouped[book.series]) {
+              grouped[book.series].books.push(book);
+            }
+          });
+          // Update method with books
+          setSeriesData({...grouped}); 
+      } catch (err) {
+          console.log("Supabase fetch failed, using default titles", err);
+      }
       
       // 2. Fetch RevenueCat Offerings
       const offeringsData = await getOfferings();
@@ -430,3 +438,4 @@ const styles = StyleSheet.create({
 });
 
 export default SubscriptionScreen;
+
