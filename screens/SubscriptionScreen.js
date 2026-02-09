@@ -178,7 +178,7 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
              </TouchableOpacity>
 
              <View style={styles.cardLegalLinks}>
-               <TouchableOpacity onPress={() => openLink('https://almakary.com/privacy-policy')}>
+               <TouchableOpacity onPress={() => onNavigate('privacy-policy')}>
                   <Text style={styles.cardLegalLink}>{t('privacyPolicy')}</Text>
                </TouchableOpacity>
                
@@ -219,28 +219,9 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
           </View>
         ) : (
           <View style={styles.cardsContainer}>
-             {['1', '2', '3', '4'].filter(id => {
-                // Check if available in RevenueCat
-                const letter = getSeriesLetter(id);
-                const hasPackage = offerings.some(p => 
-                  p.product.identifier.toLowerCase().includes(`series_${id}`) || 
-                  p.product.identifier.toLowerCase().includes(`series_${letter}`)
-                );
-                // Check if already subscribed
-                const isSubscribed = checkAccess(activeEntitlements, id);
-                
-                // Only show if available to buy OR already subscribed
-                return hasPackage || isSubscribed;
-             }).map(id => renderSeriesCard(id))}
-             
-             {/* If everything is filtered out, show a fallback */}
-             {offerings.length === 0 && Object.keys(activeEntitlements).length === 0 && (
-                <Text style={styles.noDataText}>{t('noBooks')}</Text>
-             )}
+             {['1', '2', '3', '4'].map(id => renderSeriesCard(id))}
           </View>
         )}
-
-
 
         {/* Legal Links (iOS Only) */}
         {Platform.OS === 'ios' && (
@@ -249,7 +230,7 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
               <Text style={styles.legalLink}>Terms of Use (EULA)</Text>
             </TouchableOpacity>
             <Text style={styles.linkSep}> | </Text>
-            <TouchableOpacity onPress={() => openLink('https://almakary.com/privacy-policy')}> 
+            <TouchableOpacity onPress={() => onNavigate('privacy-policy')}> 
               <Text style={styles.legalLink}>{t('privacyPolicy')}</Text>
             </TouchableOpacity>
           </View>
