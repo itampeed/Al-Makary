@@ -8,7 +8,7 @@ import { getOfferings, purchasePackage, getCustomerInfo } from '../services/reve
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Map series IDs to RevenueCat Entitlement Identifiers
+// Bilal Map series IDs to RevenueCat Entitlement Identifiers
 // Removed hardcoded map to allow dynamic matching (series_1 or series_a)
 
 // Helper to check access based on active entitlements dictionary
@@ -57,35 +57,27 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
   } 
 
   const loadData = async () => {
-    setLoading(true);
-    
-    // Default series data with titles from translation
-    const grouped = {
+    try {
+      setLoading(true);
+      
+      // 1. Fetch Content from Supabase
+      const catalog = await fetchCatalogFromSupabase();
+      const books = catalog || []; 
+
+      // Group books by series
+      const grouped = {
         '1': { title: `${t('series1')}: ${t('series1Subtitle')}`, books: [] },
         '2': { title: `${t('series2')}: ${t('series2Subtitle')}`, books: [] },
         '3': { title: `${t('series3')}: ${t('series3Subtitle')}`, books: [] },
         '4': { title: `${t('series4')}: ${t('series4Subtitle')}`, books: [] },
-    };
-    
-    // Set initial data so cards appear
-    setSeriesData(grouped);
+      };
 
-    try {
-      // 1. Fetch Content from Supabase (Non-blocking for UI)
-      try {
-          const catalog = await fetchCatalogFromSupabase();
-          const books = catalog || [];
-          
-          books.forEach(book => {
-            if (book.series && grouped[book.series]) {
-              grouped[book.series].books.push(book);
-            }
-          });
-          // Update method with books
-          setSeriesData({...grouped}); 
-      } catch (err) {
-          console.log("Supabase fetch failed, using default titles", err);
-      }
+      books.forEach(book => {
+        if (book.series && grouped[book.series]) {
+          grouped[book.series].books.push(book);
+        }
+      });
+      setSeriesData(grouped);
       
       // 2. Fetch RevenueCat Offerings
       const offeringsData = await getOfferings();
@@ -185,20 +177,7 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
                )}
              </TouchableOpacity>
 
-             <View style={styles.cardLegalLinks}>
-               <TouchableOpacity onPress={() => onNavigate('privacy-policy')}>
-                  <Text style={styles.cardLegalLink}>{t('privacyPolicy')}</Text>
-               </TouchableOpacity>
-               
-               {Platform.OS === 'ios' && (
-                 <>
-                   <Text style={styles.cardLinkSep}> • </Text>
-                   <TouchableOpacity onPress={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
-                      <Text style={styles.cardLegalLink}>Terms of Use</Text>
-                   </TouchableOpacity>
-                 </>
-               )}
-             </View>
+             {/* Legal links moved to footer */}
         </View>
       </View>
     );
@@ -227,9 +206,28 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
           </View>
         ) : (
           <View style={styles.cardsContainer}>
-             {['1', '2', '3', '4'].map(id => renderSeriesCard(id))}
+             {['1', '2', '3', '4'].filter(id => {
+                // Check if available in RevenueCat
+                const letter = getSeriesLetter(id);
+                const hasPackage = offerings.some(p => 
+                  p.product.identifier.toLowerCase().includes(`series_${id}`) || 
+                  p.product.identifier.toLowerCase().includes(`series_${letter}`)
+                );
+                // Check if already subscribed
+                const isSubscribed = checkAccess(activeEntitlements, id);
+                
+                // Only show if available to buy OR already subscribed
+                return hasPackage || isSubscribed;
+             }).map(id => renderSeriesCard(id))}
+             
+             {/* If everything is filtered out, show a fallback */}
+             {offerings.length === 0 && Object.keys(activeEntitlements).length === 0 && (
+                <Text style={styles.noDataText}>{t('noBooks')}</Text>
+             )}
           </View>
         )}
+
+
 
         {/* Legal Links (iOS Only) */}
         {Platform.OS === 'ios' && (
@@ -238,9 +236,9 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
               <Text style={styles.legalLink}>Terms of Use (EULA)</Text>
             </TouchableOpacity>
             <Text style={styles.linkSep}> | </Text>
-            <TouchableOpacity onPress={() => onNavigate('privacy-policy')}> 
-              <Text style={styles.legalLink}>{t('privacyPolicy')}</Text>
-            </TouchableOpacity>
+               <TouchableOpacity onPress={() => onNavigate('privacy-policy')}>
+                  <Text style={styles.legalLink}>{t('privacyPolicy')}</Text>
+               </TouchableOpacity>
           </View>
         )}
 
@@ -419,23 +417,6 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 20,
   },
-  cardLegalLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  cardLegalLink: {
-    fontSize: 12,
-    color: '#666',
-    textDecorationLine: 'underline',
-  },
-  cardLinkSep: {
-    fontSize: 12,
-    color: '#ccc',
-    marginHorizontal: 5,
-  },
 });
 
 export default SubscriptionScreen;
-
