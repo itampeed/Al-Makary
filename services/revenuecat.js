@@ -1,238 +1,159 @@
 import Purchases from 'react-native-purchases';
-import { Platform } from 'react-native';
 import { getRevenueCatApiKey } from '../config/revenuecat';
 
 let isInitialized = false;
+let customerInfoCache = null;
+let externalUpdateCallback = null;
+let listenerAttached = false;
 
 /**
- * Initialize RevenueCat SDK
- * Call this once when the app starts
+ * Attach customer info listener ONCE
  */
-export const initializeRevenueCat = async (userId = null) => {
-  try {
-    if (isInitialized) {
-      return;
-    }
+const attachCustomerInfoListener = () => {
+  if (listenerAttached) return;
 
-    const apiKey = getRevenueCatApiKey();
-    if (!apiKey) {
-      throw new Error('RevenueCat API key not configured for this platform');
-    }
-
-    await Purchases.configure({ apiKey });
+  Purchases.addCustomerInfoUpdateListener((customerInfo) => {
+    console.log('[RevenueCat] Customer info updated');
+    customerInfoCache = customerInfo;
     
-    // Set user ID if provided (for authenticated users)
-    if (userId) {
-      await Purchases.logIn(userId);
+    // Notify external subscriber if exists
+    if (externalUpdateCallback) {
+      externalUpdateCallback(customerInfo);
     }
+  });
 
-    isInitialized = true;
-    console.log('RevenueCat initialized successfully');
-  } catch (error) {
-    console.error('Error initializing RevenueCat:', error);
-    throw error;
+  listenerAttached = true;
+};
+
+// ... (existing code)
+
+/**
+ * Setup a listener for customer info updates (e.g. from outside the app or background)
+ * @param {Function} callback - Function to call with new customerInfo
+ */
+export const setupCustomerInfoListener = (callback) => {
+  // Just register the callback, do not attach a new listener to RevenueCat
+  externalUpdateCallback = callback;
+  
+  // Immediately invoke with current cache if available, so App.js gets current state
+  if (customerInfoCache) {
+    callback(customerInfoCache);
   }
 };
 
 /**
- * Get available products/offerings from RevenueCat
+ * Get latest cached customer info
+ */
+export const getCustomerInfo = async () => {
+  if (customerInfoCache) return customerInfoCache;
+
+  customerInfoCache = await Purchases.getCustomerInfo();
+  return customerInfoCache;
+};
+
+/**
+ * Fetch all offerings
  */
 export const getOfferings = async () => {
-  try {
-    const offerings = await Purchases.getOfferings();
-    return offerings;
-  } catch (error) {
-    console.error('Error fetching offerings:', error);
-    throw error;
-  }
+  return Purchases.getOfferings();
 };
 
 /**
- * Get available packages for purchase
+ * Get available packages
  */
 export const getPackages = async () => {
-  try {
-    const offerings = await Purchases.getOfferings();
-    if (offerings.current !== null) {
-      return offerings.current.availablePackages;
-    }
-    return [];
-  } catch (error) {
-    console.error('Error fetching packages:', error);
-    throw error;
-  }
+  const offerings = await Purchases.getOfferings();
+  return offerings.current?.availablePackages ?? [];
 };
 
 /**
  * Purchase a package
- * @param {Package} packageToPurchase - The RevenueCat package to purchase
- * @returns {Promise<PurchaseResult>}
  */
-export const purchasePackage = async (packageToPurchase) => {
+export const purchasePackage = async (pkg) => {
   try {
-    const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-    return {
-      success: true,
-      customerInfo,
-    };
+    const { customerInfo } = await Purchases.purchasePackage(pkg);
+    customerInfoCache = customerInfo;
+    return { success: true, customerInfo };
   } catch (error) {
     if (error.userCancelled) {
-      return {
-        success: false,
-        cancelled: true,
-        error: 'User cancelled the purchase',
-      };
+      return { success: false, cancelled: true };
     }
-    return {
-      success: false,
-      cancelled: false,
-      error: error.message || 'Purchase failed',
-    };
+    return { success: false, cancelled: false, error: error.message };
   }
 };
 
 /**
- * Purchase a product by identifier
- * @param {string} productIdentifier - The product identifier
- * @returns {Promise<PurchaseResult>}
- */
-export const purchaseProduct = async (productIdentifier) => {
-  try {
-    const offerings = await Purchases.getOfferings();
-    if (!offerings.current) {
-      throw new Error('No current offering available');
-    }
-
-    // Find the package with the matching product identifier
-    const packageToPurchase = offerings.current.availablePackages.find(
-      (pkg) => pkg.storeProduct.identifier === productIdentifier
-    );
-
-    if (!packageToPurchase) {
-      throw new Error(`Product ${productIdentifier} not found`);
-    }
-
-    return await purchasePackage(packageToPurchase);
-  } catch (error) {
-    return {
-      success: false,
-      cancelled: false,
-      error: error.message || 'Purchase failed',
-    };
-  }
-};
-
-/**
- * Restore purchases for the current user
+ * Restore purchases
  */
 export const restorePurchases = async () => {
   try {
     const customerInfo = await Purchases.restorePurchases();
-    return {
-      success: true,
-      customerInfo,
-    };
+    customerInfoCache = customerInfo;
+    return { success: true, customerInfo };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message || 'Failed to restore purchases',
-    };
+    return { success: false, error: error.message };
   }
 };
 
 /**
- * Get customer info
+ * Check exact entitlement (async with optional refresh)
  */
-export const getCustomerInfo = async () => {
-  try {
-    const customerInfo = await Purchases.getCustomerInfo();
-    return customerInfo;
-  } catch (error) {
-    console.error('Error fetching customer info:', error);
-    throw error;
+export const hasActiveEntitlement = async (entitlementId, { refresh = false } = {}) => {
+  if (refresh) {
+    try {
+      customerInfoCache = await Purchases.getCustomerInfo();
+    } catch (e) {
+      console.error('[RevenueCat] Refresh failed:', e);
+    }
   }
+  
+  const active = customerInfoCache?.entitlements?.active ?? {};
+  return !!active[entitlementId];
 };
 
 /**
- * Check if user has active entitlement (has purchased)
- * @param {string} entitlementId - The entitlement identifier
+ * Check series access (checks only exact 'series_a', 'series_b' etc.)
  */
-export const hasActiveEntitlement = async (entitlementId) => {
-  try {
-    const { customerInfo } = await Purchases.getCustomerInfo();
-    return customerInfo.entitlements.active[entitlementId] !== undefined;
-  } catch (error) {
-    console.error('Error checking entitlement:', error);
-    return false;
-  }
+export const hasSeriesAccess = async (seriesId, options = {}) => {
+  const letterMap = {
+    '1': 'series_a',
+    '2': 'series_b',
+    '3': 'series_c',
+    '4': 'series_d',
+  };
+
+  const entitlementKey = letterMap[seriesId];
+  // If no mapping found (e.g. invalid seriesId), return false
+  if (!entitlementKey) return false;
+
+  return hasActiveEntitlement(entitlementKey, options);
 };
 
 /**
- * Check if user has access to a specific series dynamically
- * @param {string} seriesId - The series number ('1', '2', '3', '4')
- */
-export const hasSeriesAccess = async (seriesId) => {
-
-
-  try {
-    const { customerInfo } = await Purchases.getCustomerInfo();
-    const active = customerInfo.entitlements.active;
-    
-    console.log(`[hasSeriesAccess] Checking access for Series ${seriesId}`);
-    console.log(`[hasSeriesAccess] Active entitlements:`, Object.keys(active));
-
-    // Map numerical series ID to letter (1->a, 2->b, etc.)
-    const letterMap = { '1': 'a', '2': 'b', '3': 'c', '4': 'd' };
-    const letter = letterMap[seriesId];
-
-    // Check for any entitlement that contains "series_ID" or "series_LETTER"
-    const hasAccess = Object.keys(active).some(key => {
-      const lowerKey = key.toLowerCase();
-      // Precise check then fuzzy check
-      // We check if the key *contains* the series identifier to handle "series_1_monthly", "pro_series_a", etc.
-      const matchNumeric = lowerKey.includes(`series_${seriesId}`);
-      const matchLetter = letter && lowerKey.includes(`series_${letter}`);
-      
-      if (matchNumeric || matchLetter) {
-        console.log(`[hasSeriesAccess] Match found: ${key} for Series ${seriesId}`);
-        return true;
-      }
-      return false;
-    });
-
-    console.log(`[hasSeriesAccess] Result for Series ${seriesId}: ${hasAccess}`);
-    return hasAccess;
-
-  } catch (error) {
-    console.error(`Error checking access for series ${seriesId}:`, error);
-    return false;
-  }
-};
-
-/**
- * Log in to RevenueCat with a specific user ID
- * @param {string} userId - The Firebase User ID
+ * Login to RevenueCat
  */
 export const loginToRevenueCat = async (userId) => {
   try {
     const { customerInfo } = await Purchases.logIn(userId);
-    console.log('RevenueCat login success:', customerInfo);
+    customerInfoCache = customerInfo;
+    console.log('[RevenueCat] Login success');
     return customerInfo;
   } catch (error) {
-    console.error('RevenueCat login error:', error);
-    // Don't throw, just log. Subscription features might be limited but app shouldn't crash.
+    console.error('[RevenueCat] Login error:', error);
   }
 };
 
 /**
- * Log out from RevenueCat (resets to anonymous ID)
+ * Logout RevenueCat (back to anonymous)
  */
 export const logoutFromRevenueCat = async () => {
   try {
     const { customerInfo } = await Purchases.logOut();
-    console.log('RevenueCat logout success');
+    customerInfoCache = customerInfo;
+    console.log('[RevenueCat] Logout success');
     return customerInfo;
   } catch (error) {
-    console.error('RevenueCat logout error:', error);
+    console.error('[RevenueCat] Logout error:', error);
   }
 };
+

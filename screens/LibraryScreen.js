@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image';
 import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
@@ -63,14 +64,14 @@ const LibraryScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, cu
           <Image
             source={require('../assets/AllBooks.jpg')}
             style={styles.firstimage}
-            resizeMode="contain"
+            contentFit="contain"
           />
         </View>
         <View style={styles.imageContainer}>
           <Image
             source={require('../assets/logos/right.png')}
             style={styles.secondimage}
-            resizeMode="contain"
+            contentFit="contain"
           />
         </View>
 
@@ -85,9 +86,9 @@ const LibraryScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, cu
         <View style={styles.gridContainer}>
           {booksData.map((book) => (
             <TouchableOpacity key={book.id} style={styles.bookItem} onPress={() => handleBookPress(book)}>
-              <Image source={book.cover} style={styles.bookCover} resizeMode="cover" />
+              <Image source={book.cover} style={styles.bookCover} contentFit="cover" transition={200} cachePolicy="memory-disk" />
               <Text style={styles.bookTitle}>{t(book.seriesKey)}</Text>
-              <Text style={[styles.bookDescription, isRTL ? styles.textRight : styles.textLeft]}>{t(book.subtitleKey)}</Text>
+              <Text style={styles.bookDescription}>{t(book.subtitleKey)}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -194,6 +195,8 @@ const styles = StyleSheet.create({
   bookDescription: {
     fontSize: 12,
     color: Colors.text,
+    textAlign: 'center',
+    marginBottom: 5,
   },
   paragraphContainer: {
     paddingHorizontal: 20,

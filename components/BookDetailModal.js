@@ -9,7 +9,8 @@ import {
   ScrollView, 
   Dimensions 
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+// Switched to MaterialIcons for stability
+import { MaterialIcons } from '@expo/vector-icons';
 import Colors from '../constants/Colors';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -37,7 +38,7 @@ const BookDetailModal = ({
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Ionicons name="close" size={24} color={Colors.text} />
+            <MaterialIcons name="close" size={24} color={Colors.text} />
           </TouchableOpacity>
 
           <ScrollView 
@@ -56,13 +57,13 @@ const BookDetailModal = ({
               <View style={styles.metaRow}>
                 {book.pages && (
                   <View style={styles.metaItem}>
-                    <Ionicons name="document-text-outline" size={16} color="#666" />
+                    <MaterialIcons name="description" size={16} color="#666" />
                     <Text style={styles.metaText}>{book.pages} {t('pages') || 'Pages'}</Text>
                   </View>
                 )}
                 {book.language && (
                   <View style={styles.metaItem}>
-                    <Ionicons name="globe-outline" size={16} color="#666" />
+                    <MaterialIcons name="language" size={16} color="#666" />
                     <Text style={styles.metaText}>{book.language}</Text>
                   </View>
                 )}
@@ -82,12 +83,12 @@ const BookDetailModal = ({
           <View style={styles.footer}>
             {hasAccess ? (
               <TouchableOpacity style={styles.readButton} onPress={onRead}>
-                <Ionicons name="book-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <MaterialIcons name="menu-book" size={20} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.buttonText}>{t('readBook') || 'Read Book'}</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.subscribeButton} onPress={onSubscribe}>
-                 <Ionicons name="lock-closed-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                 <MaterialIcons name="lock" size={20} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.buttonText}>{t('subscribeToRead') || 'Subscribe to Read'}</Text>
               </TouchableOpacity>
             )}

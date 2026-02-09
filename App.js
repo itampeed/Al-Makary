@@ -26,9 +26,10 @@ import Lecture8 from './screens/LectureScreens/Lecture8';
 import Lecture9 from './screens/LectureScreens/Lecture9';
 import Lecture10 from './screens/LectureScreens/Lecture10';
 import BookReaderScreen from './screens/BookReaderScreen';
-import { initializeRevenueCat } from './services/revenuecat';
+import { initializeRevenueCat, setupCustomerInfoListener } from './services/revenuecat';
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { ContentProvider } from './contexts/ContentContext';
 import Colors from './constants/Colors';
 
 // Ignore common timer warnings if any
@@ -47,6 +48,11 @@ export default function App() {
         try {
             await initializeRevenueCat(); 
             console.log("RevenueCat initialized");
+
+            // Setup global listener for real-time updates
+            setupCustomerInfoListener((info) => {
+                console.log("[App.js] Listener received update:", JSON.stringify(info?.entitlements?.active, null, 2));
+            });
         } catch (e) {
             console.log("Failed to init RC", e);
         }
@@ -162,14 +168,16 @@ export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <View style={styles.container}>
-          <StatusBar style="light" backgroundColor={Colors.header} />
-          {isLoading ? (
-            <SplashScreen onFinish={handleSplashFinish} />
-          ) : (
-            renderCurrentScreen()
-          )}
-        </View>
+        <ContentProvider>
+            <View style={styles.container}>
+            <StatusBar style="light" backgroundColor={Colors.header} />
+            {isLoading ? (
+                <SplashScreen onFinish={handleSplashFinish} />
+            ) : (
+                renderCurrentScreen()
+            )}
+            </View>
+        </ContentProvider>
       </AuthProvider>
     </LanguageProvider>
   );

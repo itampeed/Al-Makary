@@ -5,17 +5,33 @@ import Layout from '../components/Layout';
 import Colors from '../constants/Colors';
 import { useLanguage } from '../contexts/LanguageContext';
 
-const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
+import * as ScreenCapture from 'expo-screen-capture';
+
+const BookReaderScreen = ({ routeParam, pdfUrl, onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [loading, setLoading] = useState(true);
   const { t } = useLanguage();
 
+  useEffect(() => {
+    // Prevent screen capture when this screen is mounted
+    const activate = async () => {
+      await ScreenCapture.preventScreenCaptureAsync();
+    };
+    activate();
+
+    // Allow it again when unmounted
+    return () => {
+      ScreenCapture.allowScreenCaptureAsync();
+    };
+  }, []);
+
   const remoteUrl = useMemo(() => {
+    if (pdfUrl) return pdfUrl;
     if (routeParam && routeParam.startsWith('reader:')) {
       const encoded = routeParam.slice('reader:'.length);
       try { return decodeURIComponent(encoded); } catch { return encoded; }
     }
     return null;
-  }, [routeParam]);
+  }, [routeParam, pdfUrl]);
 
   /* 
    * Custom PDF Viewer using Mozilla's PDF.js
@@ -39,6 +55,38 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
         <script>
           pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         </script>
+        <script>
+            // Bridge console logs to React Native
+            (function(){
+                var originalLog = console.log;
+                var originalError = console.error;
+                
+                console.log = function(message) {
+                    if(window.ReactNativeWebView) {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({type: 'log', message: message}));
+                    }
+                    originalLog.apply(console, arguments);
+                };
+                
+                console.error = function(message) {
+                    if(window.ReactNativeWebView) {
+                         // Convert error objects to string if needed
+                        var msg = message;
+                        if (message instanceof Error) {
+                            msg = message.message + '\\n' + message.stack;
+                        }
+                        window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', message: msg}));
+                    }
+                    originalError.apply(console, arguments);
+                };
+
+                window.onerror = function(message, source, lineno, colno, error) {
+                    if(window.ReactNativeWebView) {
+                        window.ReactNativeWebView.postMessage(JSON.stringify({type: 'error', message: 'Global: ' + message}));
+                    }
+                };
+            })();
+        </script>
         <style>
           body { 
             margin: 0; 
@@ -60,7 +108,7 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
           
           /* Skeleton Loading */
           .skeleton {
-            width: 100vw;
+            width: 100%; /* Match container width */
             height: 140vw; /* Approx A4 aspect ratio */
             background: #e0e0e0;
             position: relative;
@@ -132,10 +180,10 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
               const page = await pdfDoc.getPage(num);
               
               // Mobile-first resolution optimization
-              // Using window.innerWidth as base. 1.5x scale offers good crispness without 2x memory cost.
+              // Using window.innerWidth as base. 3.0x scale (High DPI) offers much sharper text.
               const desiredWidth = window.innerWidth; 
               const viewportRaw = page.getViewport({scale: 1});
-              const scale = (desiredWidth * 1.5) / viewportRaw.width; 
+              const scale = (desiredWidth * 10.0) / viewportRaw.width; 
               
               const viewport = page.getViewport({scale: scale});
               
@@ -157,7 +205,7 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
               // Set explicit height to prevent layout shifts if needed, but canvas usually handles it
               
             } catch (err) {
-              console.error('Page render error:', err);
+              console.error('Page render error: ' + err.message);
               div.innerHTML = '<div style="padding:20px; color:red">Error loading page ' + num + '</div>';
             }
           }
@@ -182,18 +230,24 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
             // Re-trigger observer if we still have space and haven't filled screen (rare but possible)
           }
 
+          console.log("Starting PDF load for: " + url);
           pdfjsLib.getDocument(url).promise.then(async function(pdf) {
+            console.log("PDF loaded successfully. Pages: " + pdf.numPages);
             pdfDoc = pdf;
             loader.style.display = 'none';
             renderBatch(); // Render first batch
           }).catch(function(error) {
             loader.innerText = 'Error: ' + error.message;
-            console.error('Error loading PDF:', error);
+            console.error('Error loading PDF: ' + error.message);
           });
         </script>
       </body>
     </html>
   `;
+
+  useEffect(() => {
+    console.log('[BookReaderScreen] Mounted. remoteUrl:', remoteUrl);
+  }, [remoteUrl]);
 
   return (
     <Layout 
@@ -206,9 +260,9 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
       showBack={showBack}
     >
       <View style={styles.container}>
-        {remoteUrl ? (
+        {pdfBase64 ? (
             <WebView 
-                source={{ html: getViewerHtml(remoteUrl) }}
+                source={{ html: getViewerHtml(pdfBase64) }}
                 style={styles.webview}
                 startInLoadingState={true}
                 renderLoading={() => (
@@ -218,6 +272,18 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
                     </View>
                 )}
                 originWhitelist={['*']}
+                onMessage={(event) => {
+                    try {
+                        const data = JSON.parse(event.nativeEvent.data);
+                        if (data.type === 'error') {
+                            console.error('[WebView Error]:', data.message);
+                        } else if (data.type === 'log') {
+                            console.log('[WebView Log]:', data.message);
+                        }
+                    } catch (e) {
+                         console.log('[WebView Raw]:', event.nativeEvent.data);
+                    }
+                }}
                 onError={(syntheticEvent) => {
                     const { nativeEvent } = syntheticEvent;
                     console.warn('WebView error: ', nativeEvent);
@@ -234,8 +300,16 @@ const BookReaderScreen = ({ routeParam, onMenuPress, isMenuVisible, onCloseMenu,
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  webview: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background,
+  },
+  webview: { 
+    flex: 1, 
+    width: '95%',
+    alignSelf: 'center',
+    backgroundColor: '#525659', // Match HTML body color
+  },
   loadingContainer: { 
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'white',

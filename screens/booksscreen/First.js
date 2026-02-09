@@ -1,11 +1,12 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Image, Alert } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { Image } from 'expo-image';
 import Layout from '../../components/Layout';
 import Footer from '../../components/Footer';
 import Colors from '../../constants/Colors';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { fetchCatalogFromSupabase } from '../../services/supabaseContent';
 import { hasSeriesAccess } from '../../services/revenuecat';
+import { useContent } from '../../contexts/ContentContext';
 
 import BookDetailModal from '../../components/BookDetailModal';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,11 +14,14 @@ import { useAuth } from '../../contexts/AuthContext';
 const FirstBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const [hasAccess, setHasAccess] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
-  const [books, setBooks] = React.useState([]);
   const [selectedBook, setSelectedBook] = React.useState(null);
   const [modalVisible, setModalVisible] = React.useState(false);
+  
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
+  const { books: allBooks } = useContent();
+
+  const books = useMemo(() => allBooks.filter(b => b.series === '1'), [allBooks]);
 
   // Use useEffect to refresh status when screen mounts or user changes
   React.useEffect(() => {
@@ -27,13 +31,9 @@ const FirstBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
 
   const loadData = async () => {
     try {
-      const [access, catalog] = await Promise.all([
-        hasSeriesAccess('1'),
-        fetchCatalogFromSupabase()
-      ]);
-      
+      // access check
+      const access = await hasSeriesAccess('1');
       setHasAccess(access);
-      setBooks(catalog.filter(b => b.series === '1'));
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -100,7 +100,9 @@ const FirstBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, 
               <Image 
                 source={book.coverUrl ? { uri: book.coverUrl } : require('../../assets/icon.png')} 
                 style={styles.bookCover} 
-                resizeMode="contain" 
+                contentFit="contain"
+                transition={200}
+                cachePolicy="memory-disk"
               />
               <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
               {book.author && <Text style={styles.bookAuthor} numberOfLines={1}>{book.author}</Text>}
@@ -252,4 +254,3 @@ const styles = StyleSheet.create({
 });
 
 export default FirstBookScreen;
-

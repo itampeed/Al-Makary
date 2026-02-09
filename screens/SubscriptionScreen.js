@@ -177,7 +177,20 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
                )}
              </TouchableOpacity>
 
-             {/* Legal links moved to footer */}
+             <View style={styles.cardLegalLinks}>
+               <TouchableOpacity onPress={() => openLink('https://almakary.com/privacy-policy')}>
+                  <Text style={styles.cardLegalLink}>{t('privacyPolicy')}</Text>
+               </TouchableOpacity>
+               
+               {Platform.OS === 'ios' && (
+                 <>
+                   <Text style={styles.cardLinkSep}> • </Text>
+                   <TouchableOpacity onPress={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+                      <Text style={styles.cardLegalLink}>Terms of Use</Text>
+                   </TouchableOpacity>
+                 </>
+               )}
+             </View>
         </View>
       </View>
     );
@@ -416,6 +429,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 20,
+  },
+  cardLegalLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 15,
+  },
+  cardLegalLink: {
+    fontSize: 12,
+    color: '#666',
+    textDecorationLine: 'underline',
+  },
+  cardLinkSep: {
+    fontSize: 12,
+    color: '#ccc',
+    marginHorizontal: 5,
   },
 });
 
