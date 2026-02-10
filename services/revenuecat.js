@@ -25,7 +25,52 @@ const attachCustomerInfoListener = () => {
   listenerAttached = true;
 };
 
-// ... (existing code)
+// ... imports
+
+// Flag to track if configure() has been called
+let isConfigured = false;
+
+/**
+ * Initialize RevenueCat SDK
+ * Safe to call multiple times - ensures singleton exists.
+ */
+export const initializeRevenueCat = async () => {
+  if (isConfigured) {
+      console.log("[RevenueCat] Already configured, skipping.");
+      return;
+  }
+
+  const apiKey = getRevenueCatApiKey();
+  if (!apiKey) {
+    console.error('[RevenueCat] No API key found for this platform.');
+    return;
+  }
+
+  try {
+    console.log('[RevenueCat] Configuring SDK...');
+    await Purchases.configure({ apiKey });
+    isConfigured = true;
+    isInitialized = true;
+    
+    // Initial fetch of customer info
+    customerInfoCache = await Purchases.getCustomerInfo();
+    attachCustomerInfoListener();
+    
+    console.log('[RevenueCat] SDK Configured Successfully');
+  } catch (error) {
+    console.error('[RevenueCat] Configuration failed:', error);
+  }
+};
+
+/**
+ * Ensure SDK is ready before making calls
+ */
+const ensureInitialized = async () => {
+    if (!isConfigured) {
+        console.warn("[RevenueCat] SDK not configured yet. Attempting auto-init...");
+        await initializeRevenueCat();
+    }
+};
 
 /**
  * Setup a listener for customer info updates (e.g. from outside the app or background)
@@ -45,6 +90,7 @@ export const setupCustomerInfoListener = (callback) => {
  * Get latest cached customer info
  */
 export const getCustomerInfo = async () => {
+  await ensureInitialized(); // SAFETY CHECK
   if (customerInfoCache) return customerInfoCache;
 
   customerInfoCache = await Purchases.getCustomerInfo();
@@ -55,6 +101,7 @@ export const getCustomerInfo = async () => {
  * Fetch all offerings
  */
 export const getOfferings = async () => {
+  await ensureInitialized(); // SAFETY CHECK
   return Purchases.getOfferings();
 };
 

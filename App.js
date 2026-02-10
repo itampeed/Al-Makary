@@ -41,11 +41,15 @@ export default function App() {
   const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [navigationHistory, setNavigationHistory] = useState(['home']);
 
+  // New state to track RC readiness
+  const [isRevenueCatReady, setRevenueCatReady] = useState(false);
+  const [isSplashAnimationDone, setSplashAnimationDone] = useState(false);
+
   useEffect(() => {
-    console.log("App mounted. Initializing..."); 
     // Initialize RevenueCat anonymously on app launch
     const initRC = async () => {
         try {
+            console.log("App mounted. Initializing RevenueCat...");
             await initializeRevenueCat(); 
             console.log("RevenueCat initialized");
 
@@ -55,13 +59,23 @@ export default function App() {
             });
         } catch (e) {
             console.log("Failed to init RC", e);
+        } finally {
+            // Mark RC as ready regardless of success/failure so app doesn't hang
+            setRevenueCatReady(true);
         }
     };
-    initRC();
+    initRC(); 
   }, []);
 
+  // Only hide splash screen when BOTH animation is done AND RevenueCat is ready
+  useEffect(() => {
+    if (isSplashAnimationDone && isRevenueCatReady) {
+        setIsLoading(false);
+    }
+  }, [isSplashAnimationDone, isRevenueCatReady]);
+
   const handleSplashFinish = () => {
-    setIsLoading(false);
+    setSplashAnimationDone(true);
   };
 
   const handleNavigate = (screen) => {
