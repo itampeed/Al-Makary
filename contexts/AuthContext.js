@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }) => {
         
         // Identify user in RevenueCat
         if (parsedUser.uid) {
-            loginToRevenueCat(parsedUser.uid);
+            await loginToRevenueCat(parsedUser.uid);
         }
       }
     } catch (error) {

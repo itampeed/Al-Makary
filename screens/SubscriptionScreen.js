@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { fetchCatalogFromSupabase } from '../services/supabaseContent';
-import { getOfferings, purchasePackage, getCustomerInfo } from '../services/revenuecat';
+import { getOfferings, purchasePackage, getCustomerInfo, restorePurchases } from '../services/revenuecat';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -118,6 +118,29 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
     }
   };
 
+  const handleRestore = async () => {
+    try {
+        setLoading(true);
+        const result = await restorePurchases();
+        
+        if (result.success && result.customerInfo) {
+            setActiveEntitlements(result.customerInfo.entitlements.active);
+            
+            if (Object.keys(result.customerInfo.entitlements.active).length > 0) {
+                Alert.alert(t('success'), t('restoreSuccess') || 'Purchases restored successfully!');
+            } else {
+                Alert.alert(t('info'), t('noPurchasesToRestore') || 'No active subscriptions found to restore.');
+            }
+        } else {
+            Alert.alert('Error', result.error || 'Restore failed.');
+        }
+    } catch (e) {
+        Alert.alert('Error', e.message);
+    } finally {
+        setLoading(false);
+    }
+  };
+
   const manageSubscription = () => {
     if (Platform.OS === 'ios') {
       Linking.openURL('https://apps.apple.com/account/subscriptions');
@@ -197,6 +220,9 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
         <View style={styles.headerContainer}>
           <Text style={styles.pageTitle}>{t('subscriptionsTitle')}</Text>
           <Text style={styles.subTitle}>{t('subscriptionsSubtitle')}</Text>
+          <TouchableOpacity onPress={handleRestore} style={styles.restoreButton}>
+            <Text style={styles.restoreText}>{t('restorePurchases') || 'Restore Purchases'}</Text>
+          </TouchableOpacity>
         </View>
         
         {loading ? (
@@ -224,6 +250,7 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
         )}
 
         <Footer />
+        <Text style={styles.debugText}>Active: {Object.keys(activeEntitlements).join(', ')}</Text>
       </ScrollView>
     </Layout>
   );
@@ -392,11 +419,26 @@ const styles = StyleSheet.create({
     color: '#ccc',
     marginHorizontal: 8,
   },
-  noDataText: {
+  debugText: {
+    fontSize: 10,
+    fontFamily: 'monospace',
+    marginBottom: 10,
+  },
+  restoreButton: {
+    marginTop: 10,
+    padding: 10,
+  },
+  restoreText: {
+    color: Colors.header,
+    textDecorationLine: 'underline',
+    fontSize: 14,
+  },
+  debugText: {
     textAlign: 'center',
-    fontSize: 16,
-    color: '#666',
-    marginTop: 20,
+    fontSize: 10,
+    color: '#999',
+    marginBottom: 20,
+    marginTop: 10,
   },
 });
 
