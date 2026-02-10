@@ -260,9 +260,9 @@ const BookReaderScreen = ({ routeParam, pdfUrl, onMenuPress, isMenuVisible, onCl
       showBack={showBack}
     >
       <View style={styles.container}>
-        {pdfBase64 ? (
+        {remoteUrl ? (
             <WebView 
-                source={{ html: getViewerHtml(pdfBase64) }}
+                source={{ html: getViewerHtml(remoteUrl) }}
                 style={styles.webview}
                 startInLoadingState={true}
                 renderLoading={() => (

@@ -325,6 +325,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 4,
   },
+  cardLegalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 5,
+  },
+  cardLegalLink: {
+    fontSize: 10,
+    color: '#999',
+    textDecorationLine: 'underline',
+  },
+  cardLegalSep: {
+    fontSize: 10,
+    color: '#ccc',
+    marginHorizontal: 5,
+  },
   autoRenewText: {
     fontSize: 12,
     color: '#888',
@@ -431,11 +446,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ccc',
     marginHorizontal: 8,
-  },
-  debugText: {
-    fontSize: 10,
-    fontFamily: 'monospace',
-    marginBottom: 10,
   },
   restoreButton: {
     marginTop: 10,
