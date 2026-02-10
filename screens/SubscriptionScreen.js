@@ -33,7 +33,6 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
   const [offerings, setOfferings] = useState([]);
   const [activeEntitlements, setActiveEntitlements] = useState({});
   const [processingParams, setProcessingParams] = useState(null); // { seriesId: string }
-  const [debugError, setDebugError] = useState(null);
   
   const { t, isRTL } = useLanguage();
   const { isAuthenticated } = useAuth();
@@ -92,7 +91,6 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
 
     } catch (error) {
       console.error('Error loading subscription data:', error);
-      setDebugError(error.message || JSON.stringify(error));
     } finally {
       setLoading(false);
     }
@@ -226,14 +224,6 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
         )}
 
         <Footer />
-
-        {/* Debug Info */}
-        <View style={styles.debugContainer}>
-            <Text style={styles.debugTitle}>Debug Info:</Text>
-            <Text style={styles.debugText}>Active Entitlements: {JSON.stringify(activeEntitlements, null, 2)}</Text>
-            <Text style={styles.debugText}>Offerings: {JSON.stringify(offerings, null, 2)}</Text>
-            {debugError && <Text style={[styles.debugText, {color: 'red'}]}>Error: {debugError}</Text>}
-        </View>
       </ScrollView>
     </Layout>
   );
@@ -407,20 +397,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     marginTop: 20,
-  },
-  debugContainer: {
-    padding: 20,
-    backgroundColor: '#eee',
-    marginTop: 20,
-  },
-  debugTitle: {
-    fontWeight: 'bold',
-    marginBottom: 5,
-  },
-  debugText: {
-    fontSize: 10,
-    fontFamily: 'monospace',
-    marginBottom: 10,
   },
 });
 
