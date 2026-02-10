@@ -200,7 +200,21 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
                )}
              </TouchableOpacity>
 
-             {/* Legal links moved to footer */}
+             {/* Legal links inside card */}
+             <View style={styles.cardLegalContainer}>
+               <TouchableOpacity onPress={() => onNavigate('privacy-policy')}>
+                  <Text style={styles.cardLegalLink}>{t('privacyPolicy')}</Text>
+               </TouchableOpacity>
+               
+               {Platform.OS === 'ios' && (
+                 <>
+                   <Text style={styles.cardLegalSep}> | </Text>
+                   <TouchableOpacity onPress={() => openLink('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+                     <Text style={styles.cardLegalLink}>Terms of Use (EULA)</Text>
+                   </TouchableOpacity>
+                 </>
+               )}
+             </View>
         </View>
       </View>
     );
@@ -250,7 +264,6 @@ const SubscriptionScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigat
         )}
 
         <Footer />
-        <Text style={styles.debugText}>Active: {Object.keys(activeEntitlements).join(', ')}</Text>
       </ScrollView>
     </Layout>
   );
@@ -432,13 +445,6 @@ const styles = StyleSheet.create({
     color: Colors.header,
     textDecorationLine: 'underline',
     fontSize: 14,
-  },
-  debugText: {
-    textAlign: 'center',
-    fontSize: 10,
-    color: '#999',
-    marginBottom: 20,
-    marginTop: 10,
   },
 });
 

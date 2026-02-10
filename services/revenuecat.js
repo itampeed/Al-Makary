@@ -163,10 +163,10 @@ export const hasActiveEntitlement = async (entitlementId, { refresh = false } = 
  */
 export const hasSeriesAccess = async (seriesId, options = {}) => {
   const letterMap = {
-    '1': 'series_a',
-    '2': 'series_b',
-    '3': 'series_c',
-    '4': 'series_d',
+    '1': 'series_a_access',
+    '2': 'series_b_access',
+    '3': 'series_c_access',
+    '4': 'series_d_access',
   };
 
   const entitlementKey = letterMap[seriesId];
