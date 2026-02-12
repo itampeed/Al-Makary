@@ -143,6 +143,17 @@ export const translations = {
     // Languages
     english: 'English',
     arabic: 'العربية',
+    videoLecture1Title: 'يسوع المسيح وتعاليمه',
+    videoLecture2Title: 'الكنيسة والعذراء مريم',
+    videoLecture3Title: 'الإيمان والعقيدة',
+    videoLecture4Title: 'قوانين الكنيسة',
+    videoLecture5Title: 'صلوات الكنيسة',
+    videoLecture6Title: 'أسرار الكنيسة',
+    videoLecture7Title: 'أصوام الكنيسة',
+    videoLecture8Title: 'أعياد الكنيسة',
+    videoLecture9Title: 'التَّاريخ اللِّيتورجي لكنيسة الإسكندريَّة',
+    videoLecture10Title: 'الأبحاث وموضوعات عامة',
+    tapToWatch: 'اضغط للمشاهدة على يوتيوب',
   },
   en: {
     // Menu
@@ -287,6 +298,17 @@ export const translations = {
 
     // Languages
     english: 'English',
+    videoLecture1Title: 'Jesus Christ and His Teachings',
+    videoLecture2Title: 'The Church and Virgin Mary',
+    videoLecture3Title: 'Faith and Doctrine',
+    videoLecture4Title: 'Church Canons',
+    videoLecture5Title: 'Church Prayers',
+    videoLecture6Title: 'Church Mysteries',
+    videoLecture7Title: 'Church Fasts',
+    videoLecture8Title: 'Church Feasts',
+    videoLecture9Title: 'Liturgical History of the Church of Alexandria',
+    videoLecture10Title: 'Research and General Topics',
+    tapToWatch: 'Tap to watch on YouTube',
     arabic: 'العربية',
   }
 };

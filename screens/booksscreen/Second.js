@@ -17,12 +17,17 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
   const [loading, setLoading] = React.useState(true);
   const [selectedBook, setSelectedBook] = React.useState(null);
   const [modalVisible, setModalVisible] = React.useState(false);
+  const [languageFilter, setLanguageFilter] = React.useState('Arabic'); // null = all, 'English', 'Arabic'
   
   const { t, isRTL } = useLanguage();
   const { user } = useAuth();
   const { books: allBooks } = useContent();
 
-  const books = useMemo(() => allBooks.filter(b => b.series === '2'), [allBooks]);
+  const books = useMemo(() => {
+    const seriesBooks = allBooks.filter(b => b.series === '2');
+    if (!languageFilter) return seriesBooks;
+    return seriesBooks.filter(b => b.language === languageFilter);
+  }, [allBooks, languageFilter]);
 
   React.useEffect(() => {
     console.log('SecondBookScreen mounted or user changed, reloading data...');
@@ -83,6 +88,22 @@ const SecondBookScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate,
         <View style={styles.titleContainer}>
           <Text style={styles.title}>{t('series2')}</Text>
           <Text style={styles.subtitle}>{t('series2Subtitle')}</Text>
+        </View>
+
+        {/* Language Filter */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity 
+            style={[styles.filterButton, languageFilter === 'English' && styles.filterButtonActive]}
+            onPress={() => setLanguageFilter(languageFilter === 'English' ? null : 'English')}
+          >
+            <Text style={[styles.filterButtonText, languageFilter === 'English' && styles.filterButtonTextActive]}>English</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.filterButton, languageFilter === 'Arabic' && styles.filterButtonActive]}
+            onPress={() => setLanguageFilter(languageFilter === 'Arabic' ? null : 'Arabic')}
+          >
+            <Text style={[styles.filterButtonText, languageFilter === 'Arabic' && styles.filterButtonTextActive]}>العربية</Text>
+          </TouchableOpacity>
         </View>
 
         {!hasAccess && (
@@ -250,6 +271,34 @@ const styles = StyleSheet.create({
     padding: 20,
     fontStyle: 'italic',
     color: '#666',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 20,
+    gap: 10,
+    paddingHorizontal: 20,
+  },
+  filterButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    alignItems: 'center',
+  },
+  filterButtonActive: {
+    backgroundColor: Colors.header,
+    borderColor: Colors.header,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    color: Colors.text,
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
 

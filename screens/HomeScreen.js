@@ -49,7 +49,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
             </TouchableOpacity>
           </View>
 
-          {/* <View style={styles.section}>
+          <View style={styles.section}>
             <Image 
               source={require('../assets/IMG_32673B75A9C0-21.jpg')} 
               style={styles.sectionImage}
@@ -58,7 +58,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
             <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('lectures')}>
               <Text style={styles.sectionText}>{t('manuscripts')}</Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
 
           <View style={styles.section}>
             <Image 
@@ -77,7 +77,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               style={styles.sectionImage}
               resizeMode="cover"
             />
-            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
+            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('videoLectures')}>
               <Text style={styles.sectionText}>{t('lectures')}</Text>
             </TouchableOpacity>
           </View>
@@ -88,7 +88,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               style={styles.sectionImage}
               resizeMode="cover"
             />
-            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
+            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('audioLectures')}>
               <Text style={styles.sectionText}>{t('selectedLectures')}</Text>
             </TouchableOpacity>
           </View>
@@ -99,7 +99,7 @@ const HomeScreen = ({ onNavigate, currentScreen, onBack, showBack, onMenuPress, 
               style={styles.sectionImage}
               resizeMode="cover"
             />
-            <TouchableOpacity style={styles.sectionButton} onPress={() => onNavigate('library')}>
+            <TouchableOpacity style={styles.sectionButton} onPress={() => Linking.openURL('https://youtube.com/playlist?list=PLDTISUTAuz_x7nmYI2e_GyQVILhHvgyA5')}>
               <Text style={styles.sectionText}>{t('liturgiesAndHymns')}</Text>
             </TouchableOpacity>
           </View>

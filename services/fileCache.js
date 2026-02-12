@@ -1,4 +1,4 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
 const CACHE_FOLDER = FileSystem.documentDirectory + 'book_cache/';
@@ -7,7 +7,6 @@ export const ensureCacheDirectory = async () => {
     try {
         const dirInfo = await FileSystem.getInfoAsync(CACHE_FOLDER);
         if (!dirInfo.exists) {
-            console.log("Creating cache directory...");
             await FileSystem.makeDirectoryAsync(CACHE_FOLDER, { intermediates: true });
         }
     } catch (error) {
@@ -33,18 +32,15 @@ export const ensureFileCached = async (remoteUrl, filename = null) => {
         const fileInfo = await FileSystem.getInfoAsync(localUri);
 
         if (fileInfo.exists) {
-            console.log(`[Cache] File found locally: ${name}`);
             return localUri;
         }
 
-        console.log(`[Cache] Downloading ${name}...`);
         const downloadRes = await FileSystem.downloadAsync(remoteUrl, localUri);
         
         if (downloadRes.status !== 200) {
             throw new Error(`Download failed with status ${downloadRes.status}`);
         }
 
-        console.log(`[Cache] Downloaded to ${downloadRes.uri}`);
         return downloadRes.uri;
 
     } catch (error) {
@@ -60,7 +56,7 @@ export const ensureFileCached = async (remoteUrl, filename = null) => {
  */
 export const readFileAsBase64 = async (localUri) => {
     try {
-        return await FileSystem.readAsStringAsync(localUri, { encoding: FileSystem.EncodingType.Base64 });
+        return await FileSystem.readAsStringAsync(localUri, { encoding: 'base64' });
     } catch (error) {
         console.error("[Cache] Error reading file as base64:", error);
         return null;

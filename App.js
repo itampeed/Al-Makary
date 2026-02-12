@@ -5,6 +5,8 @@ import SplashScreen from './components/SplashScreen';
 import HomeScreen from './screens/HomeScreen';
 import AboutScreen from './screens/AboutScreen';
 import LecturesScreen from './screens/LecturesScreen';
+import AudioLecturesScreen from './screens/AudioLecturesScreen';
+import VideoLecturesScreen from './screens/VideoLecturesScreen';
 import LibraryScreen from './screens/LibraryScreen';
 
 import PrivacyPolicyScreen from './screens/PrivacyPolicyScreen';
@@ -30,6 +32,7 @@ import { initializeRevenueCat, setupCustomerInfoListener } from './services/reve
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { ContentProvider } from './contexts/ContentContext';
+import { AudioProvider } from './contexts/AudioContext';
 import Colors from './constants/Colors';
 
 // Ignore common timer warnings if any
@@ -139,6 +142,10 @@ export default function App() {
         return <AboutScreen {...commonProps} />;
       case 'lectures':
         return <LecturesScreen {...commonProps} />;
+      case 'videoLectures':
+        return <VideoLecturesScreen {...commonProps} />;
+      case 'audioLectures':
+        return <AudioLecturesScreen {...commonProps} />;
       case 'library':
         return <LibraryScreen {...commonProps} />;
 
@@ -182,16 +189,18 @@ export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <ContentProvider>
-            <View style={styles.container}>
-            <StatusBar style="light" backgroundColor={Colors.header} />
-            {isLoading ? (
-                <SplashScreen onFinish={handleSplashFinish} />
-            ) : (
-                renderCurrentScreen()
-            )}
-            </View>
-        </ContentProvider>
+        <AudioProvider>
+          <ContentProvider>
+              <View style={styles.container}>
+              <StatusBar style="light" backgroundColor={Colors.header} />
+              {isLoading ? (
+                  <SplashScreen onFinish={handleSplashFinish} />
+              ) : (
+                  renderCurrentScreen()
+              )}
+              </View>
+          </ContentProvider>
+        </AudioProvider>
       </AuthProvider>
     </LanguageProvider>
   );

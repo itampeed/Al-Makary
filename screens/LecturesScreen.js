@@ -1,45 +1,91 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import Layout from '../components/Layout';
-import Footer from '../components/Footer';
 import Colors from '../constants/Colors';
 import { useLanguage } from '../contexts/LanguageContext';
+import { ensureFileCached, readFileAsBase64 } from '../services/fileCache';
+import { WebView } from 'react-native-webview';
 
 const LecturesScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, currentScreen, onBack, showBack }) => {
   const { t } = useLanguage();
+  const [pdfBase64, setPdfBase64] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Sample 10 books
-  const Lectures = [
-    { id: 2, cover: require('../assets/book2.jpg'), titleKey: 'lecture2Title' },
-    { id: 1, cover: require('../assets/book1.jpg'), titleKey: 'lecture1Title' },
-    { id: 4, cover: require('../assets/book4.jpg'), titleKey: 'lecture4Title' },
-    { id: 3, cover: require('../assets/book3.jpg'), titleKey: 'lecture3Title' },
-    { id: 6, cover: require('../assets/book2.jpg'), titleKey: 'lecture6Title' },
-    { id: 5, cover: require('../assets/book1.jpg'), titleKey: 'lecture5Title' },
-    { id: 8, cover: require('../assets/book4.jpg'), titleKey: 'lecture8Title' },
-    { id: 7, cover: require('../assets/book3.jpg'), titleKey: 'lecture7Title' },
-    { id: 10, cover: require('../assets/book2.jpg'), titleKey: 'lecture10Title' },
-    { id: 9, cover: require('../assets/book1.jpg'), titleKey: 'lecture9Title' },
-  ];
+  const PDF_URL = 'https://sfcuxyeybuwiunjmrood.supabase.co/storage/v1/object/public/randomfiles/makhtootatfile.pdf';
 
-  const handleBookPress = (book) => {
-    const mapping = {
-      1: 'lecture-1',
-      2: 'lecture-2',
-      3: 'lecture-3',
-      4: 'lecture-4',
-      5: 'lecture-5',
-      6: 'lecture-6',
-      7: 'lecture-7',
-      8: 'lecture-8',
-      9: 'lecture-9',
-      10: 'lecture-10',
-    };
-    const routeKey = mapping[book.id];
-    if (routeKey) {
-      onNavigate(routeKey);
+  useEffect(() => {
+    loadPdf();
+  }, []);
+
+  const loadPdf = async () => {
+    try {
+      const localUri = await ensureFileCached(PDF_URL, 'makhtootatfile.pdf');
+      
+      if (!localUri) {
+         throw new Error("Failed to download or cache file");
+      }
+
+      const base64 = await readFileAsBase64(localUri);
+      
+      if (!base64) {
+          throw new Error("Failed to read file as base64");
+      }
+
+      setPdfBase64(base64);
+    } catch (err) {
+      console.error("Error loading PDF:", err);
+      setError("Error loading document: " + (err.message || err));
+    } finally {
+      setLoading(false);
     }
   };
+
+  const getViewerHtml = (base64Data) => `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+        <script>
+          pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        </script>
+        <style>
+          body { margin: 0; padding: 0; background-color: #525659; }
+          #container { width: 100%; }
+          canvas { display: block; width: 100%; height: auto; margin-bottom: 10px; }
+        </style>
+      </head>
+      <body>
+        <div id="container"></div>
+        <script>
+          const pdfData = atob('${base64Data}');
+          const loadingTask = pdfjsLib.getDocument({data: pdfData});
+          
+          loadingTask.promise.then(function(pdf) {
+            const container = document.getElementById('container');
+            for (let i = 1; i <= pdf.numPages; i++) {
+              pdf.getPage(i).then(function(page) {
+                const scale = 3.0;
+                const viewport = page.getViewport({scale: scale});
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                container.appendChild(canvas);
+                
+                const renderContext = {
+                  canvasContext: context,
+                  viewport: viewport
+                };
+                page.render(renderContext);
+              });
+            }
+          });
+        </script>
+      </body>
+    </html>
+  `;
 
   return (
     <Layout 
@@ -51,69 +97,47 @@ const LecturesScreen = ({ onMenuPress, isMenuVisible, onCloseMenu, onNavigate, c
       onBack={onBack}
       showBack={showBack}
     >
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>{t('lecturesTitle')}</Text>
-        </View>
-        
-        {/* Books Grid */}
-        <View style={styles.gridContainer}>
-          {Lectures.map((book) => (
-            <TouchableOpacity 
-              key={book.id} 
-              style={styles.bookItem} 
-              onPress={() => handleBookPress(book)}
-            >
-              <Image source={book.cover} style={styles.bookCover} resizeMode="cover" />
-              <Text style={styles.bookTitle}>{t(book.titleKey)}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Footer />
-      </ScrollView>
+      <View style={styles.container}>
+        {loading ? (
+             <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={Colors.header} />
+                <Text style={styles.loadingText}>{t('loading') || 'Loading...'}</Text>
+             </View>
+        ) : error ? (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+            </View>
+        ) : (
+            <WebView 
+                source={{ html: getViewerHtml(pdfBase64) }}
+                style={styles.webview}
+                originWhitelist={['*']}
+            />
+        )}
+      </View>
     </Layout>
   );
 };
 
 const styles = StyleSheet.create({
-  content: {
+  container: { 
+    flex: 1, 
+    backgroundColor: Colors.background,
+  },
+  webview: { 
+    flex: 1, 
+    width: '95%',
+    alignSelf: 'center',
+    backgroundColor: '#525659',
+  },
+  loadingContainer: { 
     flex: 1,
-    paddingTop: 20,
+    alignItems: 'center', 
+    justifyContent: 'center',
   },
-  titleContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.header,
-    textAlign: 'center',
-  },
-  gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-  },
-  bookItem: {
-    width: '48%', // 3 columns per row
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  bookCover: {
-    width: '90%',
-    height: 150,
-    aspectRatio: 1, // square
-    borderRadius: 8,
-    marginBottom: 5,
-  },
-  bookTitle: {
-    fontSize: 12,
-    color: Colors.header,
-    textAlign: 'center',
-  },
+  loadingText: { marginTop: 10, color: '#666', fontSize: 16 },
+  centerContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20 },
+  errorText: { color: 'red', fontSize: 16 },
 });
 
 export default LecturesScreen;
